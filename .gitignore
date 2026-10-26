@@ -1,0 +1,35 @@
+# Footage library and any raw footage
+library/
+footage/
+*.mp4
+*.MP4
+*.mov
+*.MOV
+!testdata/clips/*.mp4
+
+# Models (fetched by engine/scripts/download_models)
+engine/models/*
+!engine/models/.gitkeep
+*.onnx
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+
+# Build outputs
+build/
+out/
+engine/build/
+engine/out/
+engine/vcpkg_installed/
+go/bin/
+*.exe
+*.test
+*.prof
+
+# Editors and OS
+.vs/
+.idea/
+.DS_Store
+Thumbs.db
