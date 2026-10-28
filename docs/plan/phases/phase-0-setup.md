@@ -16,7 +16,7 @@ Goal: both toolchains build, the repo skeleton and plan files exist, and real fo
   - Go module in `go/` with an empty `rearview` command that prints its version.
   - Input needed: the Markdown export of the plan.
   - Done when: `go build ./...` passes, the tree matches the plan, and `docs/plan/README.md` links to every plan file.
-- [ ] **0.4 C++ hello world [agent]**
+- [x] **0.4 C++ hello world [agent]**
   - `engine/` with CMake presets, `vcpkg.json` listing OpenCV and nlohmann-json, and a `main.cpp` that opens an MP4 given as an argument and prints its frame count, fps and resolution.
   - Done when: it prints `2560x1440` and a sensible fps for a front-camera file.
 - [ ] **0.5 CI [agent]**
