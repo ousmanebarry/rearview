@@ -22,7 +22,7 @@ Goal: both toolchains build, the repo skeleton and plan files exist, and real fo
 - [ ] **0.5 CI [agent]**
   - GitHub Actions workflow that builds and tests Go on every PR. Add the C++ build once 0.4 is stable (cache vcpkg so it doesn't take 40 minutes each time).
   - Done when: a PR shows green checks.
-- [ ] **0.6 Footage backup [agent]**
+- [x] **0.6 Footage backup [agent]**
   - Write `scripts/backup-footage.ps1`: copy everything from the SD card into a raw folder outside the repo and verify checksums.
   - Input needed: the SD card plugged in, holding 1–2 weeks of drives (ideally some night, rain and highway driving, plus a few locked RO clips).
   - Done when: at least 5 hours of footage are backed up outside the card with verified checksums.
