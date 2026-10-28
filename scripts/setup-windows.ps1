@@ -3,8 +3,8 @@
     Installs or checks the Rearview toolchain on Windows 11 and prints every version.
 
 .DESCRIPTION
-    Tools: Go, Git, Visual Studio 2022 Build Tools (C++ workload), CMake, vcpkg,
-    ffmpeg, exiftool. Missing tools are installed with winget (vcpkg is cloned
+    Tools: Go, Git, Git LFS, GitHub CLI, Visual Studio 2022 Build Tools (C++ workload),
+    CMake, vcpkg, ffmpeg, exiftool. Missing tools are installed with winget (vcpkg is cloned
     and bootstrapped). Also reports the Windows build (24H2+ is needed for
     Windows ML) and the GPU driver.
 
@@ -105,6 +105,8 @@ function Install-Vcpkg {
 $tools = @(
     @{ Name = 'Go';        Version = { Get-ToolVersion 'go' @('version') };      Install = { Install-Winget 'GoLang.Go' } }
     @{ Name = 'Git';       Version = { Get-ToolVersion 'git' @('--version') };   Install = { Install-Winget 'Git.Git' } }
+    @{ Name = 'Git LFS';   Version = { Get-ToolVersion 'git-lfs' @('version') }; Install = { Install-Winget 'GitHub.GitLFS' } }
+    @{ Name = 'GitHub CLI'; Version = { Get-ToolVersion 'gh' @('--version') };   Install = { Install-Winget 'GitHub.cli' } }
     @{ Name = 'VS 2022 Build Tools'; Version = { Get-VsBuildTools };            Install = {
             Install-Winget 'Microsoft.VisualStudio.2022.BuildTools' @('--override', '--quiet --wait --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended')
         } }
