@@ -33,3 +33,6 @@ go/bin/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
