@@ -30,7 +30,7 @@ Goal: both toolchains build, the repo skeleton and plan files exist, and real fo
   - Build `rearview label add --at <UTC time> --camera front --type near_miss [--note ...]`, which validates and appends to `testdata/labels/events.csv` (columns `ts_utc,camera,type,note`), plus `rearview label list`.
   - Input needed: event timestamps from watching the footage at 2× (hard brakes, close calls, cut-offs, tailgaters). Aim for 50–100 by the end of Phase 4 and keep adding.
   - Done when: the file has at least 20 validated rows.
-- [ ] **0.8 Test clips [agent]**
+- [x] **0.8 Test clips [agent]**
   - Trim three 10–30 second clips (busy city, highway, night) with ffmpeg and commit them to `testdata/clips/` via Git LFS. These feed every automated test later.
   - Input needed: the file and start time of one good stretch of each kind.
 
