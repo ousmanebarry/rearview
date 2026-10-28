@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <cstdio>
 #include <filesystem>
+#include <fstream>
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
 
@@ -16,12 +16,7 @@ TEST(Probe, MissingFileReturnsNullopt) {
 
 TEST(Probe, NonVideoFileReturnsNullopt) {
     const auto path = fs::temp_directory_path() / "rearview_probe_not_video.mp4";
-    {
-        std::FILE* f = std::fopen(path.string().c_str(), "wb");
-        ASSERT_NE(f, nullptr);
-        std::fputs("not a video", f);
-        std::fclose(f);
-    }
+    std::ofstream(path, std::ios::binary) << "not a video";
     EXPECT_FALSE(probe(path).has_value());
     fs::remove(path);
 }
