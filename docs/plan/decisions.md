@@ -31,6 +31,11 @@ Newest first; add a row whenever you make a call you'd want to explain later.
 
 | Date       | Decision                                                                                                                                              | Why                                                                                                            |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 2026-10-30 | Hard-brake threshold 10 km/h in 1 s (was 14); heading-0° receiver dropouts are removed before detection | 2.6 sweep on 10-23/10-24: P 1.00 / R 0.92 at 10, R 0.17 at 14 after the dropout fix. See docs/notes/2.6.md |
+| 2026-10-30 | Five of six swerve labels coincide with heading-0° dropouts; flagged for the owner to re-watch | They were GPS-suggested; the glitch, not the car, may have triggered them |
+| 2026-10-30 | `rearview import` on the full backup: 235 new, 0 failed, 15 min (copy-bound); second run 0 new / 235 skipped; 19 trips; camera clock offset 0 s | Task 1.6/1.7 acceptance on real footage |
+| 2026-10-30 | Migration `0002_clock_offset.sql` adds `segments.clock_offset_s`; Phase 7's search migration becomes `0003_search.sql` | Rebuilding trips must not apply a borrowed clock offset twice |
+| 2026-10-30 | Stream-copy clips: 0.2 s warm, ~6 s when the 650 MB source is not in the OS file cache | Under the 2 s target once read; the cold case is disk-bound |
 | 2026-10-30 | GPS records with a corrupt date (firmware glitch, e.g. year 41 month 2 day 0) are kept with a time repaired from the nearest good block | Position and speed in those blocks are good; exiftool keeps some with a bogus date and drops others, so the golden test allows only these extras |
 | 2026-10-30 | No accelerometer data in the freeGPS blocks (16 trailing bytes are zero in all 235 files, exiftool shows none); G-spike detection stays off | Checked every backed-up file |
 | 2026-10-30 | GPS golden inputs are 13 KB fixtures (`rearview debug gps-fixture`: ftyp + moov/gps index + each block cut to 64 bytes) from 3 files: 593F (void fixes), 669F (corrupt dates), 700R (rear) | Full files are 650 MB and stream-copied clips lose the blocks |
@@ -58,7 +63,7 @@ Fill in as you go; these become the README numbers.
 
 | Metric                                     | Value | Dataset | Date |
 | ------------------------------------------ | ----- | ------- | ---- |
-| Hard brake precision / recall              |       |         |      |
+| Hard brake precision / recall              | 1.00 / 0.92 (11 of 12) | 10-23 + 10-24, 4.2 h, 12 labels; held-out day has no hard-brake labels yet | 2026-10-30 |
 | Near-miss precision / recall               |       |         |      |
 | Following close precision / recall         |       |         |      |
 | Distance error at 5 / 10 / 15 m            |       |         |      |

@@ -21,7 +21,7 @@ func TestMissingFileGivesDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.Motion.HardBrakeDropKmh != 14 || c.LibraryPath != filepath.Join("/home/u", "rearview", "library") {
+	if c.Motion.HardBrakeDropKmh != 10 || c.LibraryPath != filepath.Join("/home/u", "rearview", "library") {
 		t.Errorf("defaults not applied: %+v", c)
 	}
 }
@@ -67,7 +67,7 @@ func TestYAMLRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(b), "hard_brake_drop_kmh: 14") {
+	if !strings.Contains(string(b), "hard_brake_drop_kmh: 10") {
 		t.Errorf("yaml:\n%s", b)
 	}
 	back, err := Load(write(t, string(b)), "/other")

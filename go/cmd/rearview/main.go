@@ -41,6 +41,12 @@ func newRootCmd(out, errOut io.Writer) *cobra.Command {
 		newLabelCmd(),
 		newDebugCmd(),
 		newConfigCmd(),
+		newImportCmd(),
+		newTripsCmd(),
+		newEventsCmd(),
+		newClipCmd(),
+		newImportLabelsCmd(),
+		newEvalCmd(),
 	)
 	return root
 }

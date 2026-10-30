@@ -27,16 +27,16 @@ Goal: `rearview import` then `rearview trips` lists your real drives with correc
   - Read duration, resolution and fps with `ffprobe -print_format json`.
   - Copy to a temp name and rename at the end, so a crash never leaves half a file in the library.
   - Done when: importing the same folder twice adds 0 rows; pulling the card mid-import leaves no partial files; tests cover each case using small fake files.
-- [ ] **1.6 Import command [agent]**
+- [x] **1.6 Import command [agent]**
   - `rearview import <path>` runs ingest + GPS extraction for each new segment and prints a summary (new, skipped, failed). `--watch` keeps watching the folder with fsnotify.
   - Done when: running it on the backed-up footage imports everything with sensible counts.
-- [ ] **1.7 Trip assembly [agent, you review]**
+- [x] **1.7 Trip assembly [agent, you review]**
   - `internal/trips`: sort segments by time; a gap over 5 minutes (configurable) starts a new trip. Give front and rear files that start within 2 seconds of each other the same `pair_key`.
   - Correct `started_at` using GPS UTC time when a fix exists (store the offset so files without a fix get the same correction).
   - Fill GPS gaps under 10 seconds by linear interpolation (`interpolated = 1`); leave longer gaps empty.
   - Compute distance (haversine sum), duration, average and maximum speed.
   - Done when: a test with hand-built segments covers gaps, pairing and clock correction, and the review confirms the real week of footage splits into the drives actually taken.
-- [ ] **1.8 Trips command and GPX export [agent]**
+- [x] **1.8 Trips command and GPX export [agent]**
   - `rearview trips` lists trips (date, start time, duration, distance, max speed). `rearview trips export <id> --gpx out.gpx` writes a GPX track.
   - Done when: the GPX opens in a map viewer and follows the roads driven.
 

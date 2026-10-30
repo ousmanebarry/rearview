@@ -14,7 +14,7 @@ func TestConfigShow(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out, "swerve_deg: 25") || !strings.Contains(out, "hard_brake_drop_kmh: 14") {
+	if !strings.Contains(out, "swerve_deg: 25") || !strings.Contains(out, "hard_brake_drop_kmh: 10") {
 		t.Errorf("merged config:\n%s", out)
 	}
 

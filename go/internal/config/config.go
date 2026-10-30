@@ -143,7 +143,7 @@ func Default(home string) Config {
 			MaxPlausibleSpeedKm: 250,
 		},
 		Motion: Motion{
-			HardBrakeDropKmh: 14,
+			HardBrakeDropKmh: 10, // tuned in 2.6; the plan started at 14
 			HardBrakeWindowS: 1,
 			SwerveDeg:        30,
 			SwerveWindowS:    1,
