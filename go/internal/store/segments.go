@@ -26,6 +26,8 @@ type Segment struct {
 	PairKey    string
 	TripID     int64 // 0 = none
 	ImportedAt time.Time
+	// ClockOffsetS is GPS time minus the camera clock; StartedAt includes it.
+	ClockOffsetS float64
 }
 
 // End is when the segment's recording stops.
@@ -62,7 +64,7 @@ func (db *DB) InsertSegment(ctx context.Context, s Segment) (int64, error) {
 }
 
 const segmentCols = `id, path, source_name, content_hash, size_bytes, camera, started_at, COALESCE(duration_s,0),
-	COALESCE(width,0), COALESCE(height,0), COALESCE(fps,0), locked, parking, COALESCE(pair_key,''), COALESCE(trip_id,0), imported_at`
+	COALESCE(width,0), COALESCE(height,0), COALESCE(fps,0), locked, parking, COALESCE(pair_key,''), COALESCE(trip_id,0), imported_at, clock_offset_s`
 
 type scanner interface{ Scan(...any) error }
 
@@ -70,7 +72,7 @@ func scanSegment(r scanner) (Segment, error) {
 	var s Segment
 	var started, imported string
 	err := r.Scan(&s.ID, &s.Path, &s.SourceName, &s.Hash, &s.SizeBytes, &s.Camera, &started, &s.DurationS,
-		&s.Width, &s.Height, &s.FPS, &s.Locked, &s.Parking, &s.PairKey, &s.TripID, &imported)
+		&s.Width, &s.Height, &s.FPS, &s.Locked, &s.Parking, &s.PairKey, &s.TripID, &imported, &s.ClockOffsetS)
 	if err != nil {
 		return s, err
 	}
