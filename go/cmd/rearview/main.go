@@ -28,6 +28,7 @@ func newRootCmd(out, errOut io.Writer) *cobra.Command {
 	root.SetOut(out)
 	root.SetErr(errOut)
 	root.SetVersionTemplate("rearview {{.Version}}\n")
+	root.PersistentFlags().String("config", "", "config file (default ~/rearview/config.yaml)")
 	root.AddCommand(
 		&cobra.Command{
 			Use:   "version",
@@ -39,6 +40,7 @@ func newRootCmd(out, errOut io.Writer) *cobra.Command {
 		},
 		newLabelCmd(),
 		newDebugCmd(),
+		newConfigCmd(),
 	)
 	return root
 }

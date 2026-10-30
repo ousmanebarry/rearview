@@ -18,7 +18,7 @@ Goal: `rearview import` then `rearview trips` lists your real drives with correc
   - `internal/store`: open the database with WAL and foreign keys, apply numbered migrations from an embedded folder (`embed.FS`), record applied versions.
   - Add `0001_init.sql` from `docs/plan/data-model.md`.
   - Done when: opening a fresh database creates every table; opening it again changes nothing; tests run against a temp file.
-- [ ] **1.4 Config file [agent]**
+- [x] **1.4 Config file [agent]**
   - `internal/config`: YAML or TOML file with library path, database path, clip folder, file-name patterns and every threshold from Feature specs. Defaults in code; the file overrides them.
   - Done when: `rearview config show` prints the merged config.
 - [ ] **1.5 Ingest [agent, you review]**
