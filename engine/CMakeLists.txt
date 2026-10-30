@@ -27,6 +27,8 @@ add_library(engine_core STATIC
   src/detect/ort_env.cpp
   src/detect/yolox.cpp
   src/pipeline/analyzer.cpp
+  src/protocol/handlers.cpp
+  src/protocol/server.cpp
   src/track/kalman.cpp
   src/track/tracker.cpp
 )
@@ -51,6 +53,7 @@ if(REARVIEW_BUILD_TESTS)
     tests/letterbox_test.cpp
     tests/nms_test.cpp
     tests/probe_test.cpp
+    tests/server_test.cpp
     tests/tracker_test.cpp
     tests/yolox_decode_test.cpp
   )

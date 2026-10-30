@@ -73,6 +73,10 @@ type Engine struct {
 	Workers     int     `yaml:"workers"`
 	JobTimeoutS float64 `yaml:"job_timeout_s"`
 	FPS         float64 `yaml:"fps"`
+	// Threads is ONNX Runtime's intra-op thread count per engine (0 = its default).
+	Threads int `yaml:"threads"`
+	// Decoder is the engine's frame source: opencv, or ffmpeg (hardware decoding).
+	Decoder string `yaml:"decoder"`
 	// EmptyFPS is used on stretches far from any motion event when the last
 	// analysed frames had no objects (Phase 6 scheduling).
 	EmptyFPS float64 `yaml:"empty_fps"`

@@ -136,6 +136,9 @@ func (s *DB) apply(ctx context.Context, m migration) error {
 	return tx.Commit()
 }
 
+// noSuchTable reports a query against a table a later migration adds.
+func noSuchTable(err error) bool { return err != nil && strings.Contains(err.Error(), "no such table") }
+
 // Versions returns the applied migration versions in order.
 func (s *DB) Versions(ctx context.Context) ([]int, error) {
 	rows, err := s.QueryContext(ctx, `SELECT version FROM schema_migrations ORDER BY version`)

@@ -38,10 +38,11 @@ Go starts the engine as a long-running child process and they talk in newline-de
 | Type        | When                            | Key fields                                                     |
 | ----------- | ------------------------------- | -------------------------------------------------------------- |
 | `ready`     | Once, after models load         | `protocol_version`, `engine_version`, `device`, `capabilities` |
+| `pong`      | Answer to `ping`                | none                                                           |
 | `progress`  | Every ~1 second during a job    | `t` (seconds into the file), `frames_done`                     |
 | `frame`     | Per analyzed frame with objects | `t`, `objects[]`                                               |
 | `embedding` | Per keyframe, or once for text  | `t` (frames only), `vector` (512 floats)                       |
-| `done`      | Job finished                    | `frames`, `fps`, `elapsed_ms`, `cancelled`                     |
+| `done`      | Job finished                    | `frames`, `fps`, `elapsed_ms`, `cancelled`, `stages_ms`        |
 | `error`     | Job failed                      | `code`, `msg`, `t` if known                                    |
 
 ## Examples
@@ -51,13 +52,19 @@ Go starts the engine as a long-running child process and they talk in newline-de
 {"id":41,"cmd":"analyze","path":"C:/rearview/library/2026/10/24/front_0042.mp4","camera":"front","windows":[[12.0,30.0]],"fps":10,"features":["detect","track","distance","ttc"]}
 {"id":41,"type":"frame","t":12.4,"objects":[{"track":7,"cls":"car","box":[812,402,1105,640],"conf":0.91,"dist_m":9.8,"ttc_s":1.3}]}
 {"id":41,"type":"progress","t":20.1,"frames_done":77}
-{"id":41,"type":"done","frames":180,"fps":143.2,"elapsed_ms":1257,"cancelled":false}
+{"id":41,"type":"done","frames":180,"fps":143.2,"elapsed_ms":1257,"cancelled":false,"stages_ms":{"decode":310.2,"preprocess":250.1,"inference":610.4,"postprocess":6.0,"tracking":4.1,"geometry":1.0}}
 {"id":42,"type":"error","code":"decode_failed","msg":"corrupt packet","t":14.2}
+{"id":43,"cmd":"ping"}
+{"id":43,"type":"pong"}
 ```
 
 ## Field details
 
 - `windows`: list of `[start, end]` in seconds from the start of the file. Empty list = whole file.
+- `analyze` also accepts `debug_video` (write an MP4 with the boxes drawn) and `decoder` (`opencv` or `ffmpeg`); both optional.
+- `cancel` gets no reply of its own: the cancelled job ends with `done` and `"cancelled": true`. A `cancel` for a job that hasn't started yet makes it end at once the same way.
+- `stages_ms`: milliseconds spent per engine stage over the whole job (`decode`, `preprocess`, `inference`, `postprocess`, `tracking`, `geometry`); `rearview bench` sums them.
+- Commands that aren't valid JSON or lack an integer `id` and a `cmd` get an `error` with code `bad_request` (and the `id` when there is one).
 - `box`: `[x1, y1, x2, y2]` in pixels of the original 2560×1440 frame, not the model's input size.
 - `cls`: one of `car`, `truck`, `bus`, `motorcycle`, `bicycle`, `person`, `traffic_light`. Everything else is dropped in the engine.
 - `dist_m` and `ttc_s`: present only when those features were requested and the value is valid; `ttc_s` is omitted when the object is not approaching.

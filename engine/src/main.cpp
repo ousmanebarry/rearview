@@ -21,7 +21,14 @@
 #include "decode/probe.h"
 #include "detect/ort_env.h"
 #include "pipeline/analyzer.h"
+#include "protocol/handlers.h"
 #include "protocol/messages.h"
+#include "protocol/server.h"
+
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
 
 namespace fs = std::filesystem;
 using namespace rearview;
@@ -178,7 +185,26 @@ int cmd_detect(const Args& a, const fs::path& models) {
     return 0;
 }
 
-void usage() { std::cerr << "usage: engine <probe|info|detect> ...\n"; }
+void usage() { std::cerr << "usage: engine <probe|info|detect|serve> ...\n"; }
+
+// engine serve: the long-running protocol server (protocol/README.md).
+int cmd_serve(const Args& a, const fs::path& models) {
+#ifdef _WIN32
+    // Text-mode stdout would turn "\n" into "\r\n".
+    _setmode(_fileno(stdout), _O_BINARY);
+    _setmode(_fileno(stdin), _O_BINARY);
+#endif
+    std::ios::sync_with_stdio(false);
+    const auto dcfg = detector_config(a, models);
+    pipeline::Analyzer analyzer(dcfg);
+    std::map<std::string, protocol::Handler> handlers{{"analyze", protocol::analyze_handler(analyzer)}};
+    std::vector<std::string> caps;
+    for (const auto& [k, v] : handlers) caps.push_back(k);
+    protocol::Server srv(std::cin, std::cout,
+                         {REARVIEW_ENGINE_VERSION, dcfg.device, caps}, std::move(handlers));
+    std::cerr << "engine: serving on stdin/stdout (device " << dcfg.device << ")\n";
+    return srv.run();
+}
 
 }  // namespace
 
@@ -194,6 +220,7 @@ int main(int argc, char** argv) {
         if (cmd == "probe") return cmd_probe(a);
         if (cmd == "info") return cmd_info(a, models);
         if (cmd == "detect") return cmd_detect(a, models);
+        if (cmd == "serve") return cmd_serve(a, models);
     } catch (const pipeline::AnalyzeError& e) {
         std::cerr << "engine: " << e.code << ": " << e.what() << "\n";
         return 1;

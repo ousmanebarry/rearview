@@ -47,6 +47,7 @@ func newRootCmd(out, errOut io.Writer) *cobra.Command {
 		newClipCmd(),
 		newImportLabelsCmd(),
 		newEvalCmd(),
+		newProcessCmd(),
 	)
 	return root
 }
