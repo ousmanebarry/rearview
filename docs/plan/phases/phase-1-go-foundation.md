@@ -4,11 +4,11 @@
 
 Goal: `rearview import` then `rearview trips` lists your real drives with correct distances and times, and the GPX export lines up with real roads on a map.
 
-- [ ] **1.1 MP4 box walker [agent, you review]**
+- [x] **1.1 MP4 box walker [agent, you review]**
   - `internal/mp4gps`: read the box tree (4-byte big-endian size + 4-byte type; size 1 means a 64-bit size follows; size 0 means "to end of file"). Recurse into container boxes (`moov`, `trak`, `mdia`, `minf`, `stbl`, `udta`).
   - Use `io.ReaderAt` and read headers only; never load a whole file into memory (files are hundreds of MB).
   - Done when: a `rearview debug boxes <file>` command prints the box tree of a real file, and a unit test covers 64-bit sizes and a truncated file.
-- [ ] **1.2 GPS block decoder [agent, you review]**
+- [x] **1.2 GPS block decoder [agent, you review]**
   - Find the GPS blocks (marked `freeGPS`), decode time, active flag, latitude, longitude, speed and course. Values are little-endian floats; speed is in knots (× 1.852 = km/h).
   - Work out the coordinate format by decoding a point at a known location, then compare against `exiftool -ee`.
   - Skip records where the active flag says there is no fix. Look for accelerometer values in the same blocks and decode them if present.

@@ -38,6 +38,7 @@ func newRootCmd(out, errOut io.Writer) *cobra.Command {
 			},
 		},
 		newLabelCmd(),
+		newDebugCmd(),
 	)
 	return root
 }
