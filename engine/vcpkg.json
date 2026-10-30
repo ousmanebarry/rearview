@@ -6,8 +6,14 @@
     {
       "name": "opencv4",
       "default-features": false,
-      "features": ["ffmpeg"]
+      "features": ["ffmpeg", "calib3d", "dnn", "jpeg", "png"]
     },
+    {
+      "name": "ffmpeg",
+      "default-features": false,
+      "features": ["avcodec", "avformat", "swscale"]
+    },
+    "eigen3",
     "nlohmann-json",
     "gtest"
   ]
