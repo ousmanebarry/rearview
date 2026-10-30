@@ -14,7 +14,7 @@ Goal: `rearview import` then `rearview trips` lists your real drives with correc
   - Skip records where the active flag says there is no fix. Look for accelerometer values in the same blocks and decode them if present.
   - Input needed: the coordinates of one known spot (for example the driveway) and a file recorded there.
   - Done when: golden test compares the output with saved exiftool output for 3+ files: latitude/longitude within 1e-5°, speed within 0.1 km/h, same number of points.
-- [ ] **1.3 Store and migrations [agent]**
+- [x] **1.3 Store and migrations [agent]**
   - `internal/store`: open the database with WAL and foreign keys, apply numbered migrations from an embedded folder (`embed.FS`), record applied versions.
   - Add `0001_init.sql` from `docs/plan/data-model.md`.
   - Done when: opening a fresh database creates every table; opening it again changes nothing; tests run against a temp file.
