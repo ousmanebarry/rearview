@@ -21,7 +21,7 @@ Goal: `rearview import` then `rearview trips` lists your real drives with correc
 - [x] **1.4 Config file [agent]**
   - `internal/config`: YAML or TOML file with library path, database path, clip folder, file-name patterns and every threshold from Feature specs. Defaults in code; the file overrides them.
   - Done when: `rearview config show` prints the merged config.
-- [ ] **1.5 Ingest [agent, you review]**
+- [x] **1.5 Ingest [agent, you review]**
   - `internal/ingest`: given a source folder, find MP4s, wait until each file's size is unchanged for 5 seconds, compute the hash (SHA-256 of the first and last 4 MB plus the size), skip known hashes, copy into `library/YYYY/MM/DD/`, then insert the `segments` row.
   - Tag camera from the file name using patterns from config (front/rear suffix); mark `locked` for files under an `RO` folder.
   - Read duration, resolution and fps with `ffprobe -print_format json`.
