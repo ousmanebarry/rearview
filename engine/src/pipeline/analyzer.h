@@ -10,9 +10,21 @@
 
 #include "core/types.h"
 #include "detect/yolox.h"
+#include "geometry/distance.h"
 #include "track/tracker.h"
 
 namespace rearview::pipeline {
+
+// Settings for distance and TTC (Phase 5).
+struct GeometryConfig {
+    // Folder with <camera>.json files from `engine calibrate`; empty = none.
+    std::filesystem::path calibration_dir;
+    // Horizontal field of view assumed when a camera has no calibration file.
+    double default_hfov_deg = 100;
+    geometry::PathRegion path;
+    double min_box_px = 40;
+    std::map<int, double> class_heights = geometry::default_class_heights();
+};
 
 struct ObjectResult {
     int track = 0;
@@ -71,14 +83,17 @@ std::vector<Detection> drop_own_vehicle(std::vector<Detection> dets, int width, 
 // Decode -> detect -> track over the requested windows of one file.
 class Analyzer {
 public:
-    Analyzer(detect::DetectorConfig det, track::TrackerConfig trk = {});
+    Analyzer(detect::DetectorConfig det, track::TrackerConfig trk = {}, GeometryConfig geo = {});
     AnalyzeSummary run(const AnalyzeOptions& opt, const Callbacks& cb,
                        const std::atomic<bool>* cancel = nullptr);
     detect::Detector& detector() { return detector_; }
+    // The calibration used for a camera at a frame size.
+    geometry::Calibration calibration(const std::string& camera, int w, int h) const;
 
 private:
     detect::Detector detector_;
     track::TrackerConfig trk_cfg_;
+    GeometryConfig geo_;
 };
 
 }  // namespace rearview::pipeline

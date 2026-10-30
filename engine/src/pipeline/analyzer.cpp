@@ -26,8 +26,17 @@ std::vector<Detection> drop_own_vehicle(std::vector<Detection> dets, int width, 
     return dets;
 }
 
-Analyzer::Analyzer(detect::DetectorConfig det, track::TrackerConfig trk)
-    : detector_(det), trk_cfg_(trk) {}
+Analyzer::Analyzer(detect::DetectorConfig det, track::TrackerConfig trk, GeometryConfig geo)
+    : detector_(det), trk_cfg_(trk), geo_(std::move(geo)) {}
+
+geometry::Calibration Analyzer::calibration(const std::string& camera, int w, int h) const {
+    if (!geo_.calibration_dir.empty()) {
+        if (auto c = geometry::load_calibration(geo_.calibration_dir / (camera + ".json"))) {
+            return c->scaled(w, h);
+        }
+    }
+    return geometry::from_fov(w, h, geo_.default_hfov_deg);
+}
 
 AnalyzeSummary Analyzer::run(const AnalyzeOptions& opt, const Callbacks& cb,
                              const std::atomic<bool>* cancel) {
@@ -47,6 +56,11 @@ AnalyzeSummary Analyzer::run(const AnalyzeOptions& opt, const Callbacks& cb,
     }
 
     const bool tracking = has(opt.features, "track");
+    const bool want_dist = has(opt.features, "distance");
+    const bool want_ttc = has(opt.features, "ttc") && tracking;
+    const int fw = src->width(), fh = src->height();
+    const auto cal = calibration(opt.camera, fw, fh);
+    const auto path_px = geo_.path.pixels(fw, fh);
     track::Tracker tracker(trk_cfg_);
     AnalyzeSummary sum;
     const auto start = Clock::now();
@@ -70,21 +84,36 @@ AnalyzeSummary Analyzer::run(const AnalyzeOptions& opt, const Callbacks& cb,
         sum.stages.postprocess += dt.postprocess_ms;
 
         FrameResult fr{frame->t, {}};
+        std::vector<bool> in_path;
         t = Clock::now();
+        std::vector<track::TrackedObject> tracked;
         if (tracking) {
-            for (const auto& o : tracker.update(dets)) {
-                fr.objects.push_back({o.id, o.cls, o.box, o.conf, std::nullopt, std::nullopt});
-            }
+            tracked = tracker.update(dets);
         } else {
-            for (const auto& d : dets) fr.objects.push_back({0, d.cls, d.box, d.conf, std::nullopt, std::nullopt});
+            for (const auto& d : dets) tracked.push_back({0, d.cls, d.conf, d.box, d.box.height(), 0});
         }
         sum.stages.tracking += ms_since(t);
+
+        t = Clock::now();
+        for (const auto& o : tracked) {
+            ObjectResult r{o.id, o.cls, o.box, o.conf, std::nullopt, std::nullopt};
+            const bool inside = geo_.path.contains(o.box, fw, fh);
+            if (want_dist) r.dist_m = geometry::distance_m(o.box, o.cls, cal, geo_.class_heights);
+            // TTC only for objects in our path; the Kalman rate is per analysed frame.
+            if (want_ttc && inside) r.ttc_s = geometry::ttc_s(o.height, o.height_vel * opt.fps, geo_.min_box_px);
+            fr.objects.push_back(r);
+            in_path.push_back(inside);
+        }
+        sum.stages.geometry += ms_since(t);
 
         ++sum.frames;
         if (dbg) {
             std::vector<debug::Overlay> ov;
-            for (const auto& o : fr.objects) ov.push_back({o.box, o.cls, o.conf, o.track, o.dist_m, o.ttc_s, false});
-            dbg->write(frame->mat, ov, frame->t);
+            for (size_t i = 0; i < fr.objects.size(); ++i) {
+                const auto& o = fr.objects[i];
+                ov.push_back({o.box, o.cls, o.conf, o.track, o.dist_m, o.ttc_s, in_path[i]});
+            }
+            dbg->write(frame->mat, ov, frame->t, want_ttc ? path_px : std::vector<cv::Point2f>{});
         }
         if (cb.on_frame && !fr.objects.empty()) cb.on_frame(fr);
         if (cb.on_progress && ms_since(last_progress) >= 1000) {

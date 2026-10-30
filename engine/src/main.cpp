@@ -20,7 +20,14 @@
 
 #include "decode/probe.h"
 #include "detect/ort_env.h"
+#include "geometry/calibration.h"
+#include "geometry/distance.h"
 #include "pipeline/analyzer.h"
+
+#include <opencv2/calib3d.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/videoio.hpp>
+#include <sstream>
 #include "protocol/handlers.h"
 #include "protocol/messages.h"
 #include "protocol/server.h"
@@ -87,6 +94,63 @@ detect::DetectorConfig detector_config(const Args& a, const fs::path& models) {
     c.conf_threshold = static_cast<float>(a.num("--conf", 0.3));
     c.nms_iou = static_cast<float>(a.num("--nms", 0.45));
     return c;
+}
+
+pipeline::GeometryConfig geometry_config(const Args& a) {
+    pipeline::GeometryConfig g;
+    g.calibration_dir = a.get("--calibration");
+    g.default_hfov_deg = a.num("--hfov", g.default_hfov_deg);
+    g.min_box_px = a.num("--min-box-px", g.min_box_px);
+    if (a.has("--path")) {
+        auto p = geometry::parse_path(a.get("--path"));
+        if (!p) throw std::invalid_argument("--path wants x,y;x,y;x,y;x,y as fractions of the frame");
+        g.path = *p;
+    }
+    if (a.has("--class-heights")) {
+        auto h = geometry::parse_class_heights(a.get("--class-heights"));
+        if (!h) throw std::invalid_argument("--class-heights wants car=1.5,truck=2.0,...");
+        g.class_heights = *h;
+    }
+    return g;
+}
+
+// engine calibrate <video> --board 9x6 --square-mm 25 --out calibration/front.json
+int cmd_calibrate(const Args& a) {
+    if (a.pos.size() != 1) {
+        std::cerr << "usage: engine calibrate <video> [--board 9x6] [--square-mm 25] [--out front.json]\n"
+                     "         [--undistort-preview out.jpg] [--max-frames 40] [--every 10]\n";
+        return 2;
+    }
+    geometry::CalibrateOptions opt;
+    const std::string board = a.get("--board", "9x6");
+    const auto x = board.find('x');
+    if (x == std::string::npos) throw std::invalid_argument("--board wants COLSxROWS of inner corners");
+    opt.board = {std::stoi(board.substr(0, x)), std::stoi(board.substr(x + 1))};
+    opt.square_mm = a.num("--square-mm", 25);
+    opt.max_frames = static_cast<int>(a.num("--max-frames", 40));
+    opt.sample_every = static_cast<int>(a.num("--every", 10));
+    const auto r = geometry::calibrate_video(a.pos[0], opt);
+    std::cout << std::format("frames with the board: {}\n", r.frames_used);
+    std::cout << std::format("standard model: rms {:.3f} px, fx {:.1f} fy {:.1f}\n", r.standard.rms, r.standard.fx, r.standard.fy);
+    std::cout << std::format("fisheye model:  rms {:.3f} px, fx {:.1f} fy {:.1f}\n", r.fisheye.rms, r.fisheye.fx, r.fisheye.fy);
+    std::cout << "kept: " << r.best.model << "\n";
+    const std::string out = a.get("--out", "calibration.json");
+    geometry::save_calibration(r.best, out);
+    std::cout << "wrote " << out << "\n";
+    if (a.has("--undistort-preview")) {
+        cv::VideoCapture cap(a.pos[0], cv::CAP_FFMPEG);
+        cv::Mat f, u;
+        cap.read(f);
+        if (r.best.model == "fisheye") {
+            cv::Matx33d newK;
+            cv::fisheye::estimateNewCameraMatrixForUndistortRectify(r.best.K(), r.best.dist, f.size(), cv::Matx33d::eye(), newK, 0.0);
+            cv::fisheye::undistortImage(f, u, r.best.K(), r.best.dist, newK);
+        } else {
+            cv::undistort(f, u, r.best.K(), r.best.dist);
+        }
+        cv::imwrite(a.get("--undistort-preview"), u);
+    }
+    return r.best.rms < 1.0 ? 0 : 3;
 }
 
 int cmd_probe(const Args& a) {
@@ -166,7 +230,13 @@ int cmd_detect(const Args& a, const fs::path& models) {
         opt.windows.emplace_back(a.num("--from", 0), a.num("--to", 1e9));
     }
     if (a.has("--no-track")) opt.features = {"detect"};
-    pipeline::Analyzer analyzer(detector_config(a, models));
+    if (a.has("--features")) {
+        opt.features.clear();
+        std::stringstream ss(a.get("--features"));
+        for (std::string f; std::getline(ss, f, ',');) opt.features.push_back(f);
+    }
+    opt.camera = a.get("--camera", "front");
+    pipeline::Analyzer analyzer(detector_config(a, models), {}, geometry_config(a));
     const bool json = a.has("--json");
     long objects = 0;
     pipeline::Callbacks cb;
@@ -185,7 +255,7 @@ int cmd_detect(const Args& a, const fs::path& models) {
     return 0;
 }
 
-void usage() { std::cerr << "usage: engine <probe|info|detect|serve> ...\n"; }
+void usage() { std::cerr << "usage: engine <probe|info|detect|serve|calibrate> ...\n"; }
 
 // engine serve: the long-running protocol server (protocol/README.md).
 int cmd_serve(const Args& a, const fs::path& models) {
@@ -196,7 +266,7 @@ int cmd_serve(const Args& a, const fs::path& models) {
 #endif
     std::ios::sync_with_stdio(false);
     const auto dcfg = detector_config(a, models);
-    pipeline::Analyzer analyzer(dcfg);
+    pipeline::Analyzer analyzer(dcfg, {}, geometry_config(a));
     std::map<std::string, protocol::Handler> handlers{{"analyze", protocol::analyze_handler(analyzer)}};
     std::vector<std::string> caps;
     for (const auto& [k, v] : handlers) caps.push_back(k);
@@ -221,6 +291,7 @@ int main(int argc, char** argv) {
         if (cmd == "info") return cmd_info(a, models);
         if (cmd == "detect") return cmd_detect(a, models);
         if (cmd == "serve") return cmd_serve(a, models);
+        if (cmd == "calibrate") return cmd_calibrate(a);
     } catch (const pipeline::AnalyzeError& e) {
         std::cerr << "engine: " << e.code << ": " << e.what() << "\n";
         return 1;

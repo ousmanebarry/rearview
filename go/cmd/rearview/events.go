@@ -13,6 +13,7 @@ import (
 
 	"rearview/internal/clips"
 	"rearview/internal/config"
+	"rearview/internal/fusion"
 	"rearview/internal/labels"
 	"rearview/internal/prefilter"
 	"rearview/internal/store"
@@ -67,8 +68,29 @@ func newEventsCmd() *cobra.Command {
 	cmd.Flags().StringVar(&typ, "type", "", "only these types (comma-separated)")
 	cmd.Flags().StringVar(&since, "since", "", "only events after this (7d, 12h or 2026-10-23)")
 	cmd.Flags().Int64Var(&tripID, "trip", 0, "only events of this trip")
-	cmd.AddCommand(newEventsDetectCmd())
+	cmd.AddCommand(newEventsDetectCmd(), newEventsFuseCmd())
 	return cmd
+}
+
+func newEventsFuseCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "fuse",
+		Short: "Recompute near-miss, following-close and tailgated events from stored observations",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			cfg, db, err := openDB(cmd.Context(), cmd)
+			if err != nil {
+				return err
+			}
+			defer db.Close()
+			n, err := fusion.Rebuild(cmd.Context(), db, fusion.Config{NearMiss: cfg.NearMiss, Following: cfg.Following})
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "%d vision events\n", n)
+			return nil
+		},
+	}
 }
 
 func parseSince(s string, now time.Time, loc *time.Location) (time.Time, error) {

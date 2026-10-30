@@ -27,6 +27,7 @@ type Config struct {
 	Motion    Motion    `yaml:"motion"`
 	Engine    Engine    `yaml:"engine"`
 	Detect    Detect    `yaml:"detect"`
+	Geometry  Geometry  `yaml:"geometry"`
 	NearMiss  NearMiss  `yaml:"near_miss"`
 	Following Following `yaml:"following"`
 	Search    Search    `yaml:"search"`
@@ -85,6 +86,16 @@ type Engine struct {
 type Detect struct {
 	ConfThreshold float64 `yaml:"conf_threshold"`
 	NMSIoU        float64 `yaml:"nms_iou"`
+}
+
+// Geometry is what the engine needs for distance (Phase 5).
+type Geometry struct {
+	// CalibrationDir holds front.json / rear.json from `engine calibrate`.
+	CalibrationDir string `yaml:"calibration_dir"`
+	// HFOVDeg is assumed for a camera without a calibration file.
+	HFOVDeg float64 `yaml:"hfov_deg"`
+	// ClassHeights are real object heights in metres.
+	ClassHeights map[string]float64 `yaml:"class_heights"`
 }
 
 type NearMiss struct {
@@ -167,6 +178,13 @@ func Default(home string) Config {
 			EmptyFPS:    10,
 		},
 		Detect: Detect{ConfThreshold: 0.3, NMSIoU: 0.45},
+		Geometry: Geometry{
+			CalibrationDir: filepath.Join(root, "calibration"),
+			HFOVDeg:        100,
+			ClassHeights: map[string]float64{
+				"person": 1.7, "bicycle": 1.6, "car": 1.5, "motorcycle": 1.4, "bus": 3.2, "truck": 2.0,
+			},
+		},
 		NearMiss: NearMiss{
 			TTCS:          1.5,
 			MinFrames:     3,

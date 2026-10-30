@@ -26,6 +26,8 @@ add_library(engine_core STATIC
   src/detect/nms.cpp
   src/detect/ort_env.cpp
   src/detect/yolox.cpp
+  src/geometry/calibration.cpp
+  src/geometry/distance.cpp
   src/pipeline/analyzer.cpp
   src/protocol/handlers.cpp
   src/protocol/server.cpp
@@ -48,6 +50,8 @@ if(REARVIEW_BUILD_TESTS)
   find_package(GTest CONFIG REQUIRED)
   add_executable(engine_tests
     tests/analyzer_test.cpp
+    tests/calibration_test.cpp
+    tests/distance_test.cpp
     tests/frame_source_test.cpp
     tests/kalman_test.cpp
     tests/letterbox_test.cpp

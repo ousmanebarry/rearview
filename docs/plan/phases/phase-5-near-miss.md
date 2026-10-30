@@ -19,7 +19,7 @@ Goal: `rearview events --type near_miss` finds your real close calls with a meas
   - "In the path" = box bottom-centre inside a trapezoid in front of the car (configurable corners, drawn on the debug video). Ignore objects outside it.
   - Add `dist_m` and `ttc_s` to `frame` replies when requested.
   - Done when: the debug video shows TTC counting down when approaching a stopped car, and unit tests cover the approaching / receding / too-small cases.
-- [ ] **5.4 Event fusion [agent, you review]**
+- [x] **5.4 Event fusion [agent, you review]**
   - `internal/fusion`: scan `observations` per track. Near-miss = TTC under threshold for 3+ consecutive frames in the path region; score rises as minimum TTC falls, with a boost when a hard brake happens within 2 seconds.
   - Following close = following time (distance ÷ GPS speed) under threshold for 3+ seconds above 50 km/h. Tailgated = the same rule on the rear camera.
   - Merge events of the same type within 3 seconds; one moment seen by both cameras becomes one event. Save minimum TTC, distance, object class and track ID in `details_json`.

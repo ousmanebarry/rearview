@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 
 	"rearview/internal/config"
 	"rearview/internal/engine"
+	"rearview/internal/fusion"
 	"rearview/internal/pipeline"
 	"rearview/internal/queue"
 	"rearview/internal/store"
@@ -96,6 +98,13 @@ func newProcessCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if kind == "analyze" && st.Done > 0 {
+				n, err := fusion.Rebuild(ctx, db, fusion.Config{NearMiss: cfg.NearMiss, Following: cfg.Following})
+				if err != nil {
+					return fmt.Errorf("fuse events: %w", err)
+				}
+				fmt.Fprintf(out, "%d vision events\n", n)
+			}
 			return nil
 		},
 	}
@@ -107,6 +116,32 @@ func newProcessCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&plain, "plain", false, "plain log lines instead of the progress view")
 	cmd.Flags().BoolVar(&embed, "embed", false, "compute CLIP keyframe vectors for search")
 	return cmd
+}
+
+// engineGeometryArgs passes the distance and TTC settings to the engine.
+func engineGeometryArgs(cfg config.Config) []string {
+	var corners []string
+	for _, c := range cfg.NearMiss.PathTrapezoid {
+		corners = append(corners, fmt.Sprintf("%g,%g", c[0], c[1]))
+	}
+	names := make([]string, 0, len(cfg.Geometry.ClassHeights))
+	for k := range cfg.Geometry.ClassHeights {
+		names = append(names, k)
+	}
+	sort.Strings(names)
+	var heights []string
+	for _, k := range names {
+		heights = append(heights, fmt.Sprintf("%s=%g", k, cfg.Geometry.ClassHeights[k]))
+	}
+	args := []string{"--path", strings.Join(corners, ";"), "--min-box-px", fmt.Sprint(cfg.NearMiss.MinBoxPx),
+		"--hfov", fmt.Sprint(cfg.Geometry.HFOVDeg)}
+	if len(heights) > 0 {
+		args = append(args, "--class-heights", strings.Join(heights, ","))
+	}
+	if cfg.Geometry.CalibrationDir != "" {
+		args = append(args, "--calibration", cfg.Geometry.CalibrationDir)
+	}
+	return args
 }
 
 func isTerminal(w io.Writer) bool {
@@ -154,6 +189,7 @@ func engineConfig(cfg config.Config, stderr io.Writer) (engine.Config, error) {
 	if cfg.Engine.Decoder != "" {
 		args = append(args, "--decoder", cfg.Engine.Decoder)
 	}
+	args = append(args, engineGeometryArgs(cfg)...)
 	return engine.Config{
 		Path:       path,
 		Args:       args,
