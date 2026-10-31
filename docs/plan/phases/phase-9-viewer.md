@@ -1,6 +1,8 @@
 # Phase 9 (optional): Desktop viewer (about 2 weeks)
 
-**Read first:** [../architecture.md](../architecture.md), [../data-model.md](../data-model.md), [../feature-specs.md](../feature-specs.md) (feature O)
+**Read first:** [design: architecture](../../design.md#architecture), [data-model.md](../../data-model.md), [design: features](../../design.md#features) (feature O)
+
+**Walkthrough:** [phase-9-viewer.md](../../walkthroughs/phase-9-viewer.md)
 
 Only start this after Phase 7 is done and Phase 10 polish is at least drafted.
 

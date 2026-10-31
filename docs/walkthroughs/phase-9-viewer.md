@@ -1,4 +1,4 @@
-# Phase 9: desktop viewer walkthrough
+# Phase 9: desktop viewer
 
 `viewer/` is a Qt 6 Widgets app (C++20, its own vcpkg manifest and CMake presets, separate from the engine so the engine build doesn't pull in Qt).
 

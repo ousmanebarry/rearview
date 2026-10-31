@@ -1,13 +1,15 @@
 # Phase 5: Near-miss and following distance (weeks 7–8)
 
-**Read first:** [../../../protocol/README.md](../../../protocol/README.md), [../feature-specs.md](../feature-specs.md) (features F, G, core math, starting thresholds), [../data-model.md](../data-model.md), [../testing.md](../testing.md)
+**Read first:** [../../../protocol/README.md](../../../protocol/README.md), [design: features](../../design.md#features) (features F, G, core math, starting thresholds), [data-model.md](../../data-model.md), [design: testing](../../design.md#testing-and-evaluation)
+
+**Walkthrough:** [phase-5-near-miss.md](../../walkthroughs/phase-5-near-miss.md)
 
 Goal: `rearview events --type near_miss` finds your real close calls with a measured precision and recall, and following distance is accurate enough to trust.
 
 - [ ] **5.1 Camera calibration [agent, you review]**
   - `engine calibrate <video> --board 9x6 --square-mm 25`: extract sharp frames, find checkerboard corners, run calibration, print the reprojection error, save `calibration/front.json` (focal length, centre, distortion).
   - The 140° front lens is very wide: try OpenCV's standard model and its fisheye model, keep whichever gives the lower reprojection error. Repeat for the rear camera.
-  - Also write `docs/notes/calibration-howto.md`: how to print the board and what to record.
+  - Also write `docs/walkthroughs/phase-5-near-miss.md`: how to print the board and what to record.
   - Input needed: a checkerboard (9×6 inner corners, squares about 25 mm) printed on stiff card, recorded with the front and rear cameras at 20+ angles and distances, including the corners of the frame.
   - Done when: reprojection error is under 1 pixel and undistorted frames show straight lines (lamp posts, building edges) as straight.
 - [ ] **5.2 Distance estimation [agent, you review]**

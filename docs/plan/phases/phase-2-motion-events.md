@@ -1,6 +1,8 @@
 # Phase 2: Motion events and clips (weeks 3–4)
 
-**Read first:** [../data-model.md](../data-model.md), [../feature-specs.md](../feature-specs.md) (features D, H, starting thresholds), [../testing.md](../testing.md), [../decisions.md](../decisions.md) (gotchas)
+**Read first:** [data-model.md](../../data-model.md), [design: features](../../design.md#features) (features D, H, starting thresholds), [design: testing](../../design.md#testing-and-evaluation), [../decisions.md](../decisions.md) (gotchas)
+
+**Walkthrough:** [phase-2-motion-events.md](../../walkthroughs/phase-2-motion-events.md)
 
 Goal: the program finds your real hard brakes and swerves from GPS alone and clips them, with no AI involved yet. This is already a useful tool and your first accuracy number.
 

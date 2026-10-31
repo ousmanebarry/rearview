@@ -1,6 +1,8 @@
 # Phase 4: Connect Go and C++ (weeks 6–7)
 
-**Read first:** [../../../protocol/README.md](../../../protocol/README.md), [../data-model.md](../data-model.md), [../architecture.md](../architecture.md), [../testing.md](../testing.md)
+**Read first:** [../../../protocol/README.md](../../../protocol/README.md), [data-model.md](../../data-model.md), [design: architecture](../../design.md#architecture), [design: testing](../../design.md#testing-and-evaluation)
+
+**Walkthrough:** [phase-4-pipeline.md](../../walkthroughs/phase-4-pipeline.md)
 
 Goal: `rearview process` runs the real engine over your library in parallel, survives the engine being killed mid-run, and resumes where it stopped after a restart.
 

@@ -1,6 +1,8 @@
 # Phase 8 (optional): Extras (about 1–2 weeks)
 
-**Read first:** [../../../protocol/README.md](../../../protocol/README.md), [../data-model.md](../data-model.md), [../feature-specs.md](../feature-specs.md) (features J, K, L)
+**Read first:** [../../../protocol/README.md](../../../protocol/README.md), [data-model.md](../../data-model.md), [design: features](../../design.md#features) (features J, K, L)
+
+**Walkthrough:** [phase-8-blur-score-report.md](../../walkthroughs/phase-8-blur-score-report.md)
 
 Only start this after Phase 7 is done and Phase 10 polish is at least drafted; each item stands alone, so pick the ones you like.
 

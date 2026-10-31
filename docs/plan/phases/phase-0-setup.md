@@ -1,11 +1,13 @@
 # Phase 0: Setup and dataset (week 1)
 
-**Read first:** [../architecture.md](../architecture.md), [../tech-stack.md](../tech-stack.md), [../repo-structure.md](../repo-structure.md)
+**Read first:** [design: architecture](../../design.md#architecture), [design: stack](../../design.md#stack), [design: repository layout](../../design.md#repository-layout)
+
+**Walkthrough:** [go-primer.md](../../walkthroughs/go-primer.md)
 
 Goal: both toolchains build, the repo skeleton and plan files exist, and real footage plus a first set of labelled events are in place. Tags: **[agent]** = an agent does it, light review; **[agent, you review]** = an agent does it, close review. **Input needed** marks something an agent can't produce on its own (footage off the SD card, a real-world measurement); the agent stops and asks for it.
 
 - [x] **0.1 Go primer [agent, you review]**
-  - Write `docs/notes/go-primer.md`: the Go patterns this repo relies on (goroutines, buffered vs unbuffered channels, `context` cancellation, `errgroup`, worker pools), each with a short runnable example in `go/examples/`.
+  - Write `docs/walkthroughs/go-primer.md`: the Go patterns this repo relies on (goroutines, buffered vs unbuffered channels, `context` cancellation, `errgroup`, worker pools), each with a short runnable example in `go/examples/`.
   - Done when: every example runs with `go run`, and the primer covers what's needed to review Phase 4 PRs.
 - [x] **0.2 Toolchain setup script [agent]**
   - Write `scripts/setup-windows.ps1`: install or check Go, Git, Visual Studio 2022 Build Tools, CMake, vcpkg, ffmpeg and exiftool (using winget where possible), then print every version.

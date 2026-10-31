@@ -1,6 +1,8 @@
 # Phase 7: Natural-language search (weeks 9–10)
 
-**Read first:** [../../../protocol/README.md](../../../protocol/README.md), [../data-model.md](../data-model.md) (added later: `keyframes`), [../feature-specs.md](../feature-specs.md) (feature I), [../testing.md](../testing.md)
+**Read first:** [../../../protocol/README.md](../../../protocol/README.md), [data-model.md](../../data-model.md) (added later: `keyframes`), [design: features](../../design.md#features) (feature I), [design: testing](../../design.md#testing-and-evaluation)
+
+**Walkthrough:** [phase-7-search.md](../../walkthroughs/phase-7-search.md)
 
 Goal: `rearview search "red truck"` returns the right moments from your own drives, with a measured hit rate.
 

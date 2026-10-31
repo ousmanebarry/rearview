@@ -1,6 +1,8 @@
 # Phase 3: C++ engine v1 (weeks 4–6)
 
-**Read first:** [../../../protocol/README.md](../../../protocol/README.md), [../tech-stack.md](../tech-stack.md), [../repo-structure.md](../repo-structure.md), [../feature-specs.md](../feature-specs.md) (feature E), [../testing.md](../testing.md)
+**Read first:** [../../../protocol/README.md](../../../protocol/README.md), [design: stack](../../design.md#stack), [design: repository layout](../../design.md#repository-layout), [design: features](../../design.md#features) (feature E), [design: testing](../../design.md#testing-and-evaluation)
+
+**Walkthrough:** [phase-3-engine.md](../../walkthroughs/phase-3-engine.md)
 
 Goal: `engine detect clip.mp4 --debug-video out.mp4` produces a video with stable, labelled boxes on cars and people. Everything runs on the CPU for now; speed comes in Phase 6.
 

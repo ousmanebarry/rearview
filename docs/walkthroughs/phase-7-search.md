@@ -1,4 +1,4 @@
-# Phase 7: natural-language search walkthrough
+# Phase 7: natural-language search
 
 ## 7.1 CLIP image encoder ([clip.cpp](../../engine/src/embed/clip.cpp))
 

@@ -1,6 +1,8 @@
 # Phase 6: Performance (weeks 8–9)
 
-**Read first:** [../architecture.md](../architecture.md), [../tech-stack.md](../tech-stack.md), [../data-model.md](../data-model.md) (`bench_runs`), [../testing.md](../testing.md), [../decisions.md](../decisions.md)
+**Read first:** [design: architecture](../../design.md#architecture), [design: stack](../../design.md#stack), [data-model.md](../../data-model.md) (`bench_runs`), [design: testing](../../design.md#testing-and-evaluation), [../decisions.md](../decisions.md)
+
+**Walkthrough:** [phase-6-performance.md](../../walkthroughs/phase-6-performance.md)
 
 Goal: a headline number ("1 hour of 1440p footage in X minutes") and a record of how each change moved it. Measure first, change one thing, measure again.
 

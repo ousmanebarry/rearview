@@ -1,4 +1,4 @@
-# Phase 8: extras walkthrough
+# Phase 8: extras
 
 ## 8.1 Privacy blur ([blur.cpp](../../engine/src/blur/blur.cpp))
 

@@ -12,7 +12,7 @@ Go starts the engine as a long-running child process and they talk in newline-de
 
 ## Lifecycle
 
-1. Go starts `engine --models <dir> --device <cpu|dml|migraphx>`.
+1. Go starts `engine serve --models <dir> --device <cpu|dml> [--threads n] [--lazy]` (`migraphx` is accepted but needs a Windows ML build of ONNX Runtime, which isn't shipped).
 2. Engine loads its models, then sends `ready` with its protocol version and capabilities.
 3. Go checks the version. A mismatch kills the process and fails the run with a clear message.
 4. Go sends one command, reads replies until `done` or `error` for that `id`, then sends the next.
@@ -27,7 +27,7 @@ Go starts the engine as a long-running child process and they talk in newline-de
 | `ping`           | 4     | Health check                                         | none                                           |
 | `analyze`        | 4     | Detect and track objects in time windows of one file | `path`, `camera`, `windows`, `fps`, `features` |
 | `extract_frames` | 8     | Save specific frames as JPEGs                        | `path`, `times`, `out_dir`                     |
-| `embed_frames`   | 7     | CLIP vectors for keyframes                           | `path`, `every_sec`                            |
+| `embed_frames`   | 7     | CLIP vectors for keyframes                           | `path`, `every_sec`, `crops`                   |
 | `embed_text`     | 7     | CLIP vector for a search query                       | `text`                                         |
 | `blur`           | 8     | Write a copy of a clip with faces and plates blurred | `path`, `out_path`                             |
 | `cancel`         | 4     | Stop the job with this id                            | `target_id`                                    |
@@ -48,7 +48,7 @@ Go starts the engine as a long-running child process and they talk in newline-de
 ## Examples
 
 ```json
-{"type":"ready","protocol_version":1,"engine_version":"0.3.0","device":"migraphx","capabilities":["analyze","embed_frames","embed_text"]}
+{"type":"ready","protocol_version":1,"engine_version":"0.3.0","device":"dml","capabilities":["analyze","blur","embed_frames","embed_text","extract_frames"]}
 {"id":41,"cmd":"analyze","path":"C:/rearview/library/2026/10/24/front_0042.mp4","camera":"front","windows":[[12.0,30.0]],"fps":10,"features":["detect","track","distance","ttc"]}
 {"id":41,"type":"frame","t":12.4,"objects":[{"track":7,"cls":"car","box":[812,402,1105,640],"conf":0.91,"dist_m":9.8,"ttc_s":1.3}]}
 {"id":41,"type":"progress","t":20.1,"frames_done":77}

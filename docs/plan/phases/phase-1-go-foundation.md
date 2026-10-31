@@ -1,6 +1,8 @@
 # Phase 1: Go foundation (weeks 2–3)
 
-**Read first:** [../repo-structure.md](../repo-structure.md), [../data-model.md](../data-model.md), [../feature-specs.md](../feature-specs.md) (features A, B, C, M), [../testing.md](../testing.md), [../decisions.md](../decisions.md) (risks and gotchas)
+**Read first:** [design: repository layout](../../design.md#repository-layout), [data-model.md](../../data-model.md), [design: features](../../design.md#features) (features A, B, C, M), [design: testing](../../design.md#testing-and-evaluation), [../decisions.md](../decisions.md) (risks and gotchas)
+
+**Walkthrough:** [phase-1-import-gps-trips.md](../../walkthroughs/phase-1-import-gps-trips.md)
 
 Goal: `rearview import` then `rearview trips` lists your real drives with correct distances and times, and the GPX export lines up with real roads on a map.
 

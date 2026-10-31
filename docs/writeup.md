@@ -1,6 +1,6 @@
 # Rearview: notes from building a dashcam analyser in Go and C++
 
-_Draft written from [plan/decisions.md](plan/decisions.md) and [notes/](notes/). Rewrite it in your own voice before publishing._
+_Draft written from [plan/decisions.md](plan/decisions.md) and [walkthroughs/](walkthroughs/). Rewrite it in your own voice before publishing._
 
 I have a two-channel dashcam (VIOFO A229 Plus, 2560×1440 front and rear) and 5.35 hours of footage from four days of ordinary driving. Rearview imports it, finds the moments worth looking at (hard brakes, following too close, being tailgated, near-misses), cuts clips and one-page reports, and lets me search the video in plain English. A Go program does the coordination; a C++ engine does the pixels; they talk over JSON lines on stdin/stdout.
 
@@ -14,7 +14,7 @@ Getting the decoder right was a day. Learning what the receiver does wrong took 
 
 - **Corrupt dates.** Occasionally a block says year 41, month 2, day 0, with a perfectly good position. Dropping those leaves holes; trusting them breaks trip assembly. The decoder now repairs the time from the nearest good block (blocks are exactly one second apart).
 - **Dropouts.** At 130 km/h on the highway the receiver sometimes reports one or two records of 0 km/h and heading exactly 0.00°, then carries on at 130. To a "speed fell by 14 km/h in one second" rule that's a 130 km/h emergency stop: the first sweep found 34 hard brakes, of which 2 were real. Removing runs of 0° records that come back to speed within 5 s cut 30 false alarms, and only then could the threshold be tuned honestly (14 → 10 km/h, which caught real 10–13 km/h drops).
-- **The ones I missed at first.** Late in the project a hard brake showed up at latitude 0, longitude 0. There were 72 records flagged valid with every field zero. Looking closer, a few more 0 km/h / 0° records at low speed had survived the dropout filter, because "a slow run that stays slow" looked like a real stop. The tell was that a stopped car keeps its last heading (I found 0.06 km/h at 260°), so 0/0 is never a real reading. Three of my GPS-suggested labels had been drafted from exactly these records, which means I'd been scoring the detector against its own bug. They're gone, and the labelled set shrank from 12 brakes to 9.
+- **The ones I missed at first.** Late in the project a hard brake showed up at latitude 0, longitude 0. There were 72 records flagged valid with every field zero, and (found later, when the desktop viewer's map drew lines from Ottawa to the Atlantic) 60 more with a latitude but a longitude of 0. Looking closer, a few more 0 km/h / 0° records at low speed had survived the dropout filter, because "a slow run that stays slow" looked like a real stop. The tell was that a stopped car keeps its last heading (I found 0.06 km/h at 260°), so 0/0 is never a real reading. Three of my GPS-suggested labels had been drafted from exactly these records, which means I'd been scoring the detector against its own bug. They're gone, and the labelled set shrank from 12 brakes to 9.
 
 What I'd tell someone else: **plot the raw signal before you tune anything**, and be suspicious of labels that came from the same signal you're evaluating.
 
@@ -30,7 +30,7 @@ The formula is easy. Most of the work was removing the reasons it fires on nothi
 - **Things that aren't in the way.** A car in the next lane can close fast without being a threat. TTC is only reported when the box's bottom-centre is inside a trapezoid ahead of the car.
 - **One bad frame.** A near-miss needs TTC under 1.5 s for 3 consecutive analysed frames. If a hard brake happens within 2 s, the score goes up: the driver's reaction is the best evidence I have.
 
-Result: over every analysed event window, no near-miss fired; stopping behind a car reads 15–17 m with TTC 7–28 s as the gap closes. But I have **no near-miss labels**, so I can't claim precision or recall, and "it didn't fire" is not the same as "it would have fired". This is the biggest gap in the project.
+Result: stopping behind a car reads 15–17 m with TTC 7–28 s as the gap closes, and the full 5.35 hours produce 6 near-miss candidates (4 of them cars closing from behind on the rear camera). But I have **no near-miss labels**, so I can't claim precision or recall, and I don't yet know how many of the 6 are real. This is the biggest gap in the project.
 
 ## 3. The performance journey: 28 → 2.4 minutes per hour
 

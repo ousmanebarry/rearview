@@ -1,6 +1,6 @@
 # Data model
 
-One SQLite database, written only by Go (the viewer reads it). This is the starting `0001_init.sql`; later phases add tables through new migrations.
+One SQLite database (`~/rearview/rearview.db`), written only by Go; the viewer opens it read-only. The schema is the migrations in [go/internal/store/migrations/](../go/internal/store/migrations/), applied in order on open: `0001_init.sql` below, then the two additions at the end.
 
 ## Conventions
 
@@ -132,7 +132,11 @@ CREATE TABLE bench_runs (
 
 ## Added later
 
-- Phase 7 (`0002_search.sql`): `keyframes(id, segment_id, t_offset_s, model, vector BLOB)` with the vector stored as 512 little-endian float32 values (2,048 bytes per keyframe).
-- Phase 8 (`0003_reports.sql`): anything the reports need beyond `trips.score`.
+- `0002_clock_offset.sql` (task 1.7): `segments.clock_offset_s`, GPS time minus file-name time, so `started_at` can be corrected again without compounding.
+- `0003_search.sql` (task 7.4): `keyframes(id, job_id, segment_id, t_offset_s, model, vector BLOB)`, one CLIP vector per keyframe and crop (`model` is `clip-vit-b32`, `clip-vit-b32/left` or `clip-vit-b32/right`), stored as 512 little-endian float32 values (2,048 bytes). `job_id` lets an interrupted embed job be rolled back like observations.
 
-**Size check:** at 10 analyzed frames per second and about 5 objects per frame, `observations` grows by roughly 180,000 rows per hour of footage. SQLite handles that easily; if it ever becomes a problem, store only frames inside event windows.
+The driving score and incident reports needed no new tables: `trips.score` was in `0001` and PDFs are written next to the clips.
+
+**Event ids are stable**: re-running `events detect` or fusion updates an event with the same type, camera and time in place, so ids and the clips pointing at them survive.
+
+**Size**: the full library (5.35 h per camera) holds 38,128 GPS points, 57,798 keyframe vectors (about 118 MB) and 696,531 observation rows for every analysed front and rear frame.

@@ -1,4 +1,4 @@
-# Phase 6: performance walkthrough
+# Phase 6: performance
 
 All numbers from `rearview bench` on the dev PC (Ryzen 7 7800X3D, RX 9070 XT, Windows 11), front camera, 2560×1440 H.264 at 30 fps, analysed at 10 fps with detection, tracking, distance and TTC. "Subset" = the first 5 files of [bench/set.txt](../../bench/set.txt) (15 min); "full set" = all 21 files (61.9 min: trip 2 day city and highway, plus 5 night files of trip 5). History: `rearview bench table`; raw runs in [bench/results/](../../bench/results/).
 
