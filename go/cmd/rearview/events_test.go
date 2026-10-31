@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -64,6 +65,9 @@ func TestParseSince(t *testing.T) {
 func TestClipCommand(t *testing.T) {
 	if _, err := os.Stat("../../../testdata/clips/city.mp4"); err != nil {
 		t.Skip("test clips not present")
+	}
+	if _, err := exec.LookPath("ffmpeg"); err != nil {
+		t.Skip("ffmpeg not on PATH")
 	}
 	cfgPath, dir := testEnv(t)
 	probeFunc = func(context.Context, string) (ingest.Probe, error) {

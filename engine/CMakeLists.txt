@@ -19,7 +19,7 @@ find_package(Threads REQUIRED)
 # FFmpeg libraries for the hardware-decoding frame source (vcpkg port "ffmpeg").
 find_path(FFMPEG_INCLUDE_DIR libavcodec/avcodec.h REQUIRED)
 set(FFMPEG_LIBS)
-foreach(lib avformat avcodec swscale avutil)
+foreach(lib avformat avcodec swresample swscale avutil)
   find_library(FFMPEG_${lib}_LIB ${lib} REQUIRED)
   list(APPEND FFMPEG_LIBS ${FFMPEG_${lib}_LIB})
 endforeach()
