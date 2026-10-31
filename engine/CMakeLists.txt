@@ -59,6 +59,23 @@ add_executable(engine src/main.cpp)
 target_link_libraries(engine PRIVATE engine_core)
 rearview_copy_ort_runtime(engine)
 
+# `cmake --install build/<preset> --prefix <dir>` writes a self-contained engine folder
+# (the release bundle): the binary with every shared library it needs next to it.
+install(TARGETS engine RUNTIME DESTINATION .)
+if(WIN32)
+  # ONNX Runtime (and DirectML) were copied next to the exe at build time, and vcpkg's
+  # applocal step copied OpenCV, FFmpeg and their dependencies there too.
+  install(DIRECTORY "$<TARGET_FILE_DIR:engine>/" DESTINATION .
+    FILES_MATCHING PATTERN "*.dll" PATTERN "gtest*" EXCLUDE)
+  # The MSVC C++ runtime, for machines without the Visual C++ Redistributable.
+  set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION .)
+  include(InstallRequiredSystemLibraries)
+else()
+  # vcpkg libraries are linked statically on Linux; only ONNX Runtime is shared.
+  set_target_properties(engine PROPERTIES INSTALL_RPATH "$ORIGIN")
+  install(FILES ${ONNXRUNTIME_INSTALL_FILES} DESTINATION .)
+endif()
+
 option(REARVIEW_BUILD_TESTS "Build GoogleTest unit tests" ON)
 if(REARVIEW_BUILD_TESTS)
   enable_testing()

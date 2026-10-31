@@ -14,8 +14,28 @@ _The desktop viewer: tracked vehicles with distance over the front camera, the t
 
 Near-miss and following-distance detection run end to end but have no accuracy numbers yet: they need labelled events and a camera calibration ([limitations](#limitations)).
 
+## Try it
+
+No dashcam, GPU or C++ toolchain needed. Each option runs on three 20-second sample clips.
+
+| Time        | How                                                                                                                                                                    |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~5 min      | **Prebuilt download.** Get `rearview-windows-x64.zip` or `rearview-linux-x64.tar.gz` from [Releases](https://github.com/ousmanebarry/rearview/releases/latest), extract it and run the quickstart (below) |
+| ~10 min     | **In the browser.** [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/ousmanebarry/rearview?quickstart=1), wait for setup to finish, then `bash scripts/quickstart.sh` |
+| ~30 s       | **Just the orchestrator.** `cd go && go test ./...` runs import, the job queue, worker pool, crash recovery and event fusion against a fake engine (`go/cmd/fakeengine`) |
+
+```powershell
+powershell -ExecutionPolicy Bypass -File quickstart.ps1     # Windows (needs ffmpeg: winget install Gyan.FFmpeg)
+./quickstart.sh                                             # Linux   (needs ffmpeg: sudo apt install ffmpeg)
+```
+
+The quickstart downloads the models (about 615 MB, checksums verified) and the sample clips once, imports the clips into `~/rearview-demo`, then runs detection, tracking, distance and TTC, indexes keyframes for search and searches for "a traffic light". It also writes `~/rearview-demo/boxes.mp4`, the first clip with every tracked object drawn on it. On a laptop CPU this takes a few minutes. The clips carry no GPS, so speed-based events (hard brakes, following distance) stay empty. Afterwards, try `rearview search "<anything>" --config ~/rearview-demo/config.yaml`.
+
+The Windows download is the DirectML build. It runs on the CPU by default; add `--device dml` (or set `engine.device: dml`) to use a DirectX 12 GPU. Releases are built by [.github/workflows/release.yml](.github/workflows/release.yml) when a `v*` tag is pushed.
+
 ## Contents
 
+- [Try it](#try-it)
 - [What it does](#what-it-does)
 - [Setup](#setup)
 - [Using it](#using-it)
@@ -77,7 +97,7 @@ Open a new terminal afterwards so `PATH` and `VCPKG_ROOT` are picked up. Check w
 cmake -P engine/scripts/download_models.cmake
 ```
 
-This fetches YOLOX-s, the CLIP ViT-B/32 image and text encoders with the tokenizer files, and YuNet into `engine/models/` (about 650 MB), checking each file's SHA-256. The engine finds `engine/models/` on its own; set `engine.models_path` in the config if you keep them elsewhere.
+This fetches YOLOX-s, the CLIP ViT-B/32 image and text encoders with the tokenizer files, and YuNet into `engine/models/` (about 615 MB), checking each file's SHA-256. The engine finds `engine/models/` on its own; set `engine.models_path` in the config if you keep them elsewhere. Once the CLI is built (step 5), `rearview models download` does the same, and `rearview models` shows which files are missing.
 
 ### 4. Build the engine
 
@@ -184,6 +204,7 @@ Real-world numbers on the dev PC: importing 235 files (118 GB) is copy-bound at 
 | `rearview eval --type <t>` / `rearview eval --search`   | Precision, recall, misses and false alarms against the labels / search top-5 rate               |
 | `rearview bench [--label text]`, `bench compare`, `bench table` | Benchmark minutes per hour of footage and per-stage times, with history                 |
 | `rearview config show`                                  | Print the effective configuration                                                               |
+| `rearview models [download]`                            | Show the engine's models folder and what's missing / download and verify the models             |
 | `rearview debug boxes\|gps <file.MP4>`                  | Inspect a recording's MP4 structure or decoded GPS                                              |
 
 Every command has `--help`. Times are shown in the configured time zone and stored in UTC. Clips, exports, PDFs and GPX files go to `~/rearview/clips/`.
@@ -291,6 +312,8 @@ git ls-files '*.cpp' '*.h' | ForEach-Object { clang-format -i $_ }
 - Go tests run the whole pipeline against a fake engine (`go/cmd/fakeengine`) that can crash, hang or ignore `cancel` on demand, so no GPU or models are needed. `go test -race` needs cgo and runs in CI.
 - Engine tests use the 20-second clips in `testdata/clips/` and skip the model tests when `engine/models/` is empty.
 - CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)): gofmt, vet, staticcheck and `go test -race` on Linux, the engine on Linux (vcpkg cached), and the Windows engine build on demand.
+- Releases ([.github/workflows/release.yml](.github/workflows/release.yml)): pushing a `v*` tag builds the Windows (DirectML) and Linux bundles with `cmake --install` (the engine with every library it needs next to it), smoke-tests them (Linux in a clean Ubuntu container), and publishes them with the sample clips. The CLI finds an engine next to itself and downloads the models on first run. The quickstart scripts are [scripts/quickstart.ps1](scripts/quickstart.ps1) and [scripts/quickstart.sh](scripts/quickstart.sh).
+- The devcontainer ([.devcontainer/](.devcontainer/)) builds the CLI from the checkout and uses the released Linux engine, so a Codespace is ready in minutes instead of waiting ~30 minutes for vcpkg.
 - Rules for changes (tests first, protocol and schema changes, one task per PR) are in [.github/AGENTS.md](.github/AGENTS.md).
 - The viewer has a scripted check: `viewer.exe --screenshot out.png --event <id>` (or `--search "<query>"`) plays for a few seconds, saves the window and a status report, and quits.
 
@@ -305,6 +328,8 @@ git ls-files '*.cpp' '*.h' | ForEach-Object { clang-format -i $_ }
 | `import` fails with ffprobe errors                          | ffmpeg/ffprobe must be on `PATH`                                                                                            |
 | Import fails with "no camera pattern matches the file name" | Adjust `import.front_pattern` / `rear_pattern` in the config to your camera's file names                                   |
 | Search says there are no keyframes                          | Run `rearview process --embed` first                                                                                        |
+| The engine can't load `yolox_s.onnx` (or the CLIP models)    | Run `rearview models` to see which folder it uses and what's missing, then `rearview models download`                       |
+| Windows blocks `quickstart.ps1` or the downloaded `.exe`s   | Run it with `powershell -ExecutionPolicy Bypass -File quickstart.ps1`; if SmartScreen warns, choose "More info" → "Run anyway" (the binaries aren't code-signed) |
 | The viewer shows "can not load driver QSQLITE"              | Rebuild the viewer: the post-build step copies the Qt plugins and `sqlite3.dll` next to `viewer.exe`                        |
 | The viewer's search box says it can't run `rearview`        | Start it with `--rearview C:/path/to/rearview.exe`                                                                          |
 | The machine crawls during a first build plus `process`      | Don't run a vcpkg build, `process` and the test suite at once; `VCPKG_MAX_CONCURRENCY` limits vcpkg's parallel jobs        |

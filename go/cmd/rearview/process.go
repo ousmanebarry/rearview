@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -84,7 +83,7 @@ func newProcessCmd() *cobra.Command {
 				}
 			}
 			fmt.Fprintf(out, "planned %d new %s jobs\n", planned, kind)
-			opt, closeLog, err := pipelineOptions(cfg, kind)
+			opt, closeLog, err := pipelineOptions(ctx, cfg, kind)
 			if err != nil {
 				return err
 			}
@@ -152,22 +151,25 @@ func isTerminal(w io.Writer) bool {
 }
 
 // enginePath finds the engine binary: the configured path if it exists or is
-// on PATH, else the dev build inside the repo.
+// on PATH, else one next to this rearview binary (the release download), else
+// the dev build inside the repo.
 func enginePath(cfg config.Config) (string, error) {
 	if p, err := exec.LookPath(cfg.Engine.Path); err == nil {
 		return p, nil
 	}
-	if root, err := findRepoRoot(); err == nil {
-		name := "engine"
-		if runtime.GOOS == "windows" {
-			name += ".exe"
+	name := engineName()
+	if dir, err := exeDir(); err == nil {
+		if p := filepath.Join(dir, name); fileExists(p) {
+			return p, nil
 		}
+	}
+	if root, err := findRepoRoot(); err == nil {
 		for _, p := range []string{
 			filepath.Join(root, "engine", "build", "dev", "RelWithDebInfo", name),
 			filepath.Join(root, "engine", "build", "dev", "Release", name),
 			filepath.Join(root, "engine", "build", "ci-linux", name),
 		} {
-			if _, err := os.Stat(p); err == nil {
+			if fileExists(p) {
 				return p, nil
 			}
 		}
@@ -175,15 +177,24 @@ func enginePath(cfg config.Config) (string, error) {
 	return "", fmt.Errorf("engine binary %q not found: build it (engine/) or set engine.path in the config", cfg.Engine.Path)
 }
 
-func engineConfig(cfg config.Config, stderr io.Writer) (engine.Config, error) {
+func fileExists(p string) bool {
+	st, err := os.Stat(p)
+	return err == nil && !st.IsDir()
+}
+
+func engineConfig(ctx context.Context, cfg config.Config, stderr io.Writer) (engine.Config, error) {
 	path, err := enginePath(cfg)
+	if err != nil {
+		return engine.Config{}, err
+	}
+	modelsPath, err := engineModels(ctx, cfg, path)
 	if err != nil {
 		return engine.Config{}, err
 	}
 	args := []string{"serve", "--device", cfg.Engine.Device,
 		"--conf", fmt.Sprint(cfg.Detect.ConfThreshold), "--nms", fmt.Sprint(cfg.Detect.NMSIoU)}
-	if cfg.Engine.ModelsPath != "" {
-		args = append(args, "--models", cfg.Engine.ModelsPath)
+	if modelsPath != "" {
+		args = append(args, "--models", modelsPath)
 	}
 	if cfg.Engine.Threads > 0 {
 		args = append(args, "--threads", fmt.Sprint(cfg.Engine.Threads))
@@ -201,14 +212,14 @@ func engineConfig(cfg config.Config, stderr io.Writer) (engine.Config, error) {
 }
 
 // pipelineOptions builds the run options; the returned func closes the engine log.
-func pipelineOptions(cfg config.Config, kind string) (pipeline.Options, func(), error) {
+func pipelineOptions(ctx context.Context, cfg config.Config, kind string) (pipeline.Options, func(), error) {
 	logPath := filepath.Join(filepath.Dir(cfg.DatabasePath), "engine.log")
 	logf, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
 	if err != nil {
 		return pipeline.Options{}, nil, err
 	}
 	close := func() { logf.Close() }
-	ecfg, err := engineConfig(cfg, logf)
+	ecfg, err := engineConfig(ctx, cfg, logf)
 	if err != nil {
 		close()
 		return pipeline.Options{}, nil, err

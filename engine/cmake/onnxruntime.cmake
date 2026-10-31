@@ -75,6 +75,8 @@ else()
   set_target_properties(onnxruntime::onnxruntime PROPERTIES IMPORTED_LOCATION "${_ort_so}"
     IMPORTED_NO_SONAME OFF)
   set(ONNXRUNTIME_RUNTIME_FILES "")
+  # Installed next to the engine, which finds them through RPATH $ORIGIN.
+  file(GLOB ONNXRUNTIME_INSTALL_FILES "${_ort_libdir}/libonnxruntime*.so*")
 endif()
 set_target_properties(onnxruntime::onnxruntime PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${_ort_inc}")
 if(REARVIEW_HAS_DML)

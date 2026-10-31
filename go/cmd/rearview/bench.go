@@ -66,7 +66,7 @@ func newBenchCmd() *cobra.Command {
 			if err := cfg.Validate(); err != nil {
 				return err
 			}
-			opt, closeLog, err := pipelineOptions(cfg, "analyze")
+			opt, closeLog, err := pipelineOptions(ctx, cfg, "analyze")
 			if err != nil {
 				return err
 			}

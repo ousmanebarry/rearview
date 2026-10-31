@@ -30,7 +30,7 @@ type textEmbedder struct {
 }
 
 func newTextEmbedder(ctx context.Context, cfg config.Config) (*textEmbedder, error) {
-	ecfg, err := engineConfig(cfg, io.Discard)
+	ecfg, err := engineConfig(ctx, cfg, io.Discard)
 	if err != nil {
 		return nil, err
 	}

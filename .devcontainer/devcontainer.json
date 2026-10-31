@@ -1,0 +1,24 @@
+{
+	// Codespaces / Dev Containers: the CLI built from this checkout plus the prebuilt Linux
+	// engine from the latest release (building the engine with vcpkg takes ~30 min), the
+	// models and ffmpeg. Then: bash scripts/quickstart.sh
+	"name": "rearview",
+	// Ubuntu 24.04, the same glibc the release engine is built against.
+	"image": "mcr.microsoft.com/devcontainers/base:noble",
+	"features": {
+		"ghcr.io/devcontainers/features/go:1": { "version": "latest" }
+	},
+	"hostRequirements": { "cpus": 4, "memory": "8gb", "storage": "32gb" },
+	"containerEnv": {
+		"REARVIEW_MODELS": "${containerWorkspaceFolder}/engine/models"
+	},
+	"remoteEnv": {
+		"PATH": "${containerWorkspaceFolder}/go/bin:${containerWorkspaceFolder}/engine/build/release:${containerEnv:PATH}"
+	},
+	"postCreateCommand": "bash .devcontainer/post-create.sh",
+	"customizations": {
+		"vscode": {
+			"extensions": ["golang.go"]
+		}
+	}
+}

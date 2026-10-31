@@ -22,7 +22,7 @@ import (
 
 // lazyEngine starts an engine that loads its models only when needed.
 func lazyEngine(ctx context.Context, cfg config.Config) (*engine.Client, error) {
-	ecfg, err := engineConfig(cfg, os.Stderr)
+	ecfg, err := engineConfig(ctx, cfg, os.Stderr)
 	if err != nil {
 		return nil, err
 	}

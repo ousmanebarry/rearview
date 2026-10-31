@@ -1,0 +1,171 @@
+name: release
+
+# Builds the downloadable bundles and publishes them as a GitHub release:
+#   rearview-windows-x64.zip   rearview.exe + engine.exe (DirectML build: CPU by default, GPU with --device dml)
+#   rearview-linux-x64.tar.gz  rearview + engine (CPU)
+#   rearview-samples.zip       the three 20-second test clips, for quickstart
+# Push a tag (git tag v0.4.0 && git push origin v0.4.0) to publish, or run it by hand:
+# with a tag it publishes that tag, without one it only builds (bundles stay as run artifacts).
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to create or update (e.g. v0.4.0); empty = build only"
+        required: false
+        default: ""
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  VERSION: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag || format('0.0.0-{0}', github.sha) }}
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}\vcpkg
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\vcpkg-bincache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go/go.mod
+          cache-dependency-path: go/go.sum
+      - name: Set up vcpkg at the manifest baseline
+        shell: pwsh
+        run: |
+          $sha = (Get-Content engine/vcpkg.json | ConvertFrom-Json).'builtin-baseline'
+          git clone https://github.com/microsoft/vcpkg $env:VCPKG_ROOT
+          git -C $env:VCPKG_ROOT checkout $sha
+          & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat" -disableMetrics
+          New-Item -ItemType Directory -Force $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-windows-${{ hashFiles('engine/vcpkg.json') }}
+          restore-keys: vcpkg-windows-
+      - name: Build the engine (DirectML build; runs on the CPU when there's no GPU)
+        working-directory: engine
+        run: |
+          cmake --preset dev-dml -DREARVIEW_BUILD_TESTS=OFF
+          cmake --build --preset dev-dml
+          cmake --install build/dev-dml --config RelWithDebInfo --prefix ../dist/rearview
+      - name: Build the CLI
+        working-directory: go
+        run: go build -trimpath -ldflags "-s -w -X main.version=$env:VERSION" -o ../dist/rearview/rearview.exe ./cmd/rearview
+      - name: Add the quickstart
+        shell: pwsh
+        run: |
+          Copy-Item scripts/quickstart.ps1, scripts/bundle/README.txt, LICENSE dist/rearview/
+      - name: Smoke test
+        shell: pwsh
+        working-directory: dist/rearview
+        run: |
+          ./engine.exe info
+          if ($LASTEXITCODE) { exit 1 }
+          ./rearview.exe version
+          $models = ./rearview.exe models | Select-Object -First 1
+          $models
+          if ($models -ne "models $(Join-Path $PWD 'models')") { throw "rearview doesn't see the bundled engine's models folder" }
+      - name: Package
+        shell: pwsh
+        run: Compress-Archive -Path dist/rearview -DestinationPath rearview-windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rearview-windows-x64
+          path: rearview-windows-x64.zip
+          if-no-files-found: error
+
+  linux:
+    # The oldest supported Ubuntu LTS, so the binaries run on it and anything newer (glibc).
+    runs-on: ubuntu-24.04
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg-bincache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go/go.mod
+          cache-dependency-path: go/go.sum
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y ninja-build nasm pkg-config autoconf autoconf-archive automake libtool
+      - name: Set up vcpkg at the manifest baseline
+        run: |
+          sha=$(jq -r '."builtin-baseline"' engine/vcpkg.json)
+          git clone https://github.com/microsoft/vcpkg "$VCPKG_ROOT"
+          git -C "$VCPKG_ROOT" checkout "$sha"
+          "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
+          mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-linux-2404-${{ hashFiles('engine/vcpkg.json') }}
+          restore-keys: vcpkg-linux-2404-
+      - name: Build the engine
+        working-directory: engine
+        run: |
+          cmake --preset ci-linux -DREARVIEW_BUILD_TESTS=OFF
+          cmake --build --preset ci-linux
+          cmake --install build/ci-linux --prefix ../dist/rearview --strip
+      - name: Build the CLI
+        working-directory: go
+        run: CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=$VERSION" -o ../dist/rearview/rearview ./cmd/rearview
+      - name: Add the quickstart
+        run: |
+          cp scripts/quickstart.sh scripts/bundle/README.txt LICENSE dist/rearview/
+          chmod +x dist/rearview/quickstart.sh dist/rearview/rearview dist/rearview/engine
+      - name: Smoke test in a clean Ubuntu container (catches missing shared libraries)
+        run: |
+          docker run --rm -v "$PWD/dist/rearview:/r:ro" ubuntu:24.04 sh -c '/r/engine info && /r/rearview version && /r/rearview models | tee /tmp/m && head -n1 /tmp/m | grep -qx "models /r/models"'
+      - name: Package
+        run: tar -czf rearview-linux-x64.tar.gz -C dist rearview
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rearview-linux-x64
+          path: rearview-linux-x64.tar.gz
+          if-no-files-found: error
+
+  samples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Zip the sample clips
+        run: zip -j0 rearview-samples.zip testdata/clips/*.mp4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rearview-samples
+          path: rearview-samples.zip
+          if-no-files-found: error
+
+  publish:
+    needs: [windows, linux, samples]
+    if: github.ref_type == 'tag' || inputs.tag != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+      - name: Create or update the release
+        run: |
+          gh release view "$VERSION" >/dev/null 2>&1 ||
+            gh release create "$VERSION" --title "Rearview $VERSION" --generate-notes --target "$GITHUB_SHA"
+          gh release upload "$VERSION" assets/* --clobber

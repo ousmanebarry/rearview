@@ -52,6 +52,7 @@ func newRootCmd(out, errOut io.Writer) *cobra.Command {
 		newSearchCmd(),
 		newReportCmd(),
 		newExportCmd(),
+		newModelsCmd(),
 	)
 	return root
 }
