@@ -55,6 +55,7 @@ Newest first; add a row whenever you make a call you'd want to explain later.
 | 2026-10-30 | Car/truck/bus boxes overlapping by IoU > 0.7 are merged across classes; boxes wider than half the frame centred in its bottom fifth (own hood) are dropped | One vehicle reported as car and truck gave two tracks; the hood was a "car" in every front frame |
 | 2026-10-30 | Tracker uses greedy IoU matching instead of the Hungarian algorithm | Same assignments at dashcam box counts, simpler to explain |
 | 2026-10-30 | Hard-brake threshold 10 km/h in 1 s (was 14); heading-0° receiver dropouts are removed before detection | 2.6 sweep on 10-23/10-24: P 1.00 / R 0.92 at 10, R 0.17 at 14 after the dropout fix. See docs/notes/2.6.md |
+| 2026-10-31 | GPS records at exactly 0,0 are treated as no fix; 0 km/h + 0° records are always dropouts; three brake labels drafted from such records removed (12 → 9) | 72 all-zero records in the 235 files; one put event 11 at 0,0. A stopped car keeps its last heading, so 0/0 is never a real reading. After the fix: P 1.00 / R 1.00 on 9 labels, 9 detections |
 | 2026-10-30 | Five of six swerve labels coincide with heading-0° dropouts; flagged for the owner to re-watch | They were GPS-suggested; the glitch, not the car, may have triggered them |
 | 2026-10-30 | `rearview import` on the full backup: 235 new, 0 failed, 15 min (copy-bound); second run 0 new / 235 skipped; 19 trips; camera clock offset 0 s | Task 1.6/1.7 acceptance on real footage |
 | 2026-10-30 | Migration `0002_clock_offset.sql` adds `segments.clock_offset_s`; Phase 7's search migration becomes `0003_search.sql` | Rebuilding trips must not apply a borrowed clock offset twice |
@@ -86,7 +87,7 @@ Fill in as you go; these become the README numbers.
 
 | Metric                                     | Value | Dataset | Date |
 | ------------------------------------------ | ----- | ------- | ---- |
-| Hard brake precision / recall              | 1.00 / 0.92 (11 of 12) | 10-23 + 10-24, 4.2 h, 12 labels; held-out day has no hard-brake labels yet | 2026-10-30 |
+| Hard brake precision / recall              | 1.00 / 1.00 (9 of 9) | 10-23 + 10-24, 4.2 h, 9 GPS-suggested labels (3 removed as dropout artefacts); held-out day has no hard-brake labels yet | 2026-10-31 |
 | Near-miss precision / recall               |       |         |      |
 | Following close precision / recall         |       |         |      |
 | Distance error at 5 / 10 / 15 m            |       |         |      |

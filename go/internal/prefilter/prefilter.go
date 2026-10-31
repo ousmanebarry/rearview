@@ -56,11 +56,17 @@ const dropoutMinKmh = 10
 // heading of exactly 0° (usually with speed 0 or a few km/h) and then came
 // back at about the same speed, seen at 130 km/h on the 401. Without this
 // every dropout looks like a hard brake or a swerve. A run that stays slow is
-// a real stop and is kept.
+// a real stop and is kept, except for records of exactly 0 km/h and 0°: the
+// receiver keeps its last heading when the car is stopped, so those are
+// dropouts too (seen braking 15 km/h -> "0" -> 6 km/h at a red light, which
+// read as a 15 km/h/s brake).
 func dropDropouts(pts []store.GPSPoint) []store.GPSPoint {
 	zero := func(p store.GPSPoint) bool { return p.HeadingDeg == 0 }
 	out := pts[:0:0]
 	for i := 0; i < len(pts); i++ {
+		if zero(pts[i]) && pts[i].SpeedKmh == 0 && i > 0 {
+			continue
+		}
 		if !zero(pts[i]) || i == 0 {
 			out = append(out, pts[i])
 			continue

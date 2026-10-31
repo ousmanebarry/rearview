@@ -76,6 +76,9 @@ func TestDecodeBlock(t *testing.T) {
 	if _, ok, err := DecodeBlock(block(rawFix{status: 'V'})); ok || err != nil {
 		t.Errorf("void record: ok=%v err=%v, want skipped", ok, err)
 	}
+	if _, ok, err := DecodeBlock(block(rawFix{21, 30, 28, 26, 10, 24, 'A', 'N', 'W', 0, 0, 0, 0})); ok || err != nil {
+		t.Errorf("0,0 record: ok=%v err=%v, want skipped", ok, err)
+	}
 	if _, _, err := DecodeBlock(block(rawFix{status: 'A', ns: 'X', ew: 'W', y: 26, mo: 1, d: 1})); err == nil {
 		t.Error("want error for a bad hemisphere")
 	}

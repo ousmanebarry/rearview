@@ -134,9 +134,17 @@ func TestReceiverDropoutIsNotABrake(t *testing.T) {
 	if got := Detect(pts, cfg()); len(got) != 0 {
 		t.Errorf("heading dropout detected as %+v", got)
 	}
-	// A real stop reading 0/0 that stays at 0 still counts.
-	stop := trace([]float64{20, 0, 0}, []float64{0, 0, 0})
+	// A real stop keeps the last heading (seen at 0.06 km/h) and still counts.
+	stop := trace([]float64{20, 0, 0}, []float64{90, 90, 90})
 	if got := Detect(stop, cfg()); len(got) != 1 {
 		t.Errorf("real stop: %+v", got)
+	}
+	// Slowing for a red light with 0 km/h / 0° records mixed in (2026-10-24
+	// 16:31:24Z): about 4 km/h per second, not a hard brake.
+	c := cfg()
+	c.HardBrakeDropKmh = 10
+	light := trace([]float64{26.9, 23.2, 19.3, 14.7, 0, 6.4, 0, 1.3, 0.1}, []float64{258, 258, 258, 258, 0, 258, 0, 257, 260})
+	if got := Detect(light, c); len(got) != 0 {
+		t.Errorf("red light: %+v", got)
 	}
 }

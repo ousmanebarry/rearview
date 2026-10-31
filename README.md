@@ -4,7 +4,7 @@ Rearview turns hours of dashcam footage into a searchable list of real driving e
 
 | | |
 | --- | --- |
-| **Hard-brake detection** | precision 1.00, recall 0.92 (11 of 12 labelled brakes; 4.2 h of footage) |
+| **Hard-brake detection** | precision 1.00, recall 1.00 (9 of 9 labelled brakes; 4.2 h of footage; labels not yet owner-reviewed) |
 | **Search** | right moment in the top 5 for 5 of 24 drafted queries (21%; 5.35 h of front footage, 19,266 keyframes) |
 | **Speed** | 1 hour of 2560×1440 footage analysed in **2.4 minutes** (RX 9070 XT, DirectML; 28 min on the CPU) |
 
@@ -56,11 +56,11 @@ flowchart LR
 
 | Event | Precision | Recall | Data |
 | --- | --- | --- | --- |
-| Hard brake (GPS speed drop ≥ 10 km/h in 1 s) | 1.00 | 0.92 | 12 labels, 2026-10-23/24, 4.2 h |
+| Hard brake (GPS speed drop ≥ 10 km/h in 1 s) | 1.00 | 1.00 | 9 labels, 2026-10-23/24, 4.2 h |
 | Swerve | 1.00 | 0.17 | 6 labels, 5 of which sit on GPS heading glitches (under review) |
 | Near-miss, following close, tailgated | — | — | no labels yet |
 
-How they were tuned: [docs/notes/2.6.md](docs/notes/2.6.md). The threshold fell from the plan's 14 to 10 km/h only after a filter for the GPS receiver's dropout records (heading exactly 0°, speed briefly 0 at 130 km/h) removed 30 false alarms.
+How they were tuned: [docs/notes/2.6.md](docs/notes/2.6.md). The threshold fell from the plan's 14 to 10 km/h only after a filter for the GPS receiver's dropout records (heading exactly 0°, speed briefly 0 at 130 km/h) removed 30 false alarms. A later pass found three more kinds of dropout (all-zero positions, and 0 km/h / 0° records at low speed); three labels drafted from those were artefacts and were removed, which is why there are 9 brake labels and not 12. The labels were drafted from GPS candidates, so these numbers say the detector matches its own candidate list after review; an independent check needs labels from watching the video.
 
 ### Search
 
@@ -115,7 +115,7 @@ Point `~/rearview/config.yaml` at the engine (`engine: {path: ..., device: dml}`
 
 ## Limitations
 
-- **Small dataset**: 5.35 hours of one camera in one city over four days; 18 labels, all from a GPS-suggested candidate pass. Final numbers on the held-out day (2026-10-25) need labels for that day.
+- **Small dataset**: 5.35 hours of one camera in one city over four days; 15 labels, all from a GPS-suggested candidate pass. Final numbers on the held-out day (2026-10-25) need labels for that day.
 - **Distance is uncalibrated**: until the checkerboard calibration and tape-measure test ([docs/notes/calibration-howto.md](docs/notes/calibration-howto.md)) are done, distance assumes a 100° pinhole lens, so following-distance events are indicative only. TTC doesn't depend on calibration.
 - **No near-miss labels**, so no precision/recall for near-miss, following and tailgating.
 - **No accelerometer** in this camera: G-forces are derived from 1 Hz GPS speed.
