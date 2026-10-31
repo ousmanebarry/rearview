@@ -55,7 +55,7 @@ func Rebuild(ctx context.Context, db *store.DB, cfg config.Motion) (int, error) 
 			})
 		}
 	}
-	if _, err := db.ReplaceEvents(ctx, "motion", MotionTypes, evs); err != nil {
+	if _, err := db.ReplaceEvents(ctx, []string{"motion"}, MotionTypes, evs); err != nil {
 		return 0, err
 	}
 	return len(evs), nil

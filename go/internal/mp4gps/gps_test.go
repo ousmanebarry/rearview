@@ -79,6 +79,9 @@ func TestDecodeBlock(t *testing.T) {
 	if _, ok, err := DecodeBlock(block(rawFix{21, 30, 28, 26, 10, 24, 'A', 'N', 'W', 0, 0, 0, 0})); ok || err != nil {
 		t.Errorf("0,0 record: ok=%v err=%v, want skipped", ok, err)
 	}
+	if _, ok, err := DecodeBlock(block(rawFix{19, 12, 43, 26, 10, 23, 'A', 'N', 'W', 4517, 0, 0, 0})); ok || err != nil {
+		t.Errorf("half-written record: ok=%v err=%v, want skipped", ok, err)
+	}
 	if _, _, err := DecodeBlock(block(rawFix{status: 'A', ns: 'X', ew: 'W', y: 26, mo: 1, d: 1})); err == nil {
 		t.Error("want error for a bad hemisphere")
 	}
@@ -152,9 +155,13 @@ func TestGolden(t *testing.T) {
 				t.Fatal(err)
 			}
 			// exiftool drops some records with a corrupt date (month 0) that we keep
-			// with a repaired time; those are the only extras allowed.
+			// with a repaired time; those are the only extras allowed. exiftool keeps
+			// the dropouts with a zero latitude or longitude, which we skip.
 			j := 0
 			for _, p := range got {
+				for j < len(want) && (want[j].Lat == 0 || want[j].Lon == 0) {
+					j++
+				}
 				if j == len(want) || math.Abs(p.Lat-want[j].Lat) > 1e-5 || math.Abs(p.Lon-want[j].Lon) > 1e-5 {
 					if !p.TimeRepaired {
 						t.Fatalf("point %d (%f,%f) has no exiftool match", p.Index, p.Lat, p.Lon)
@@ -170,6 +177,9 @@ func TestGolden(t *testing.T) {
 				if w.Time.Year() == p.Time.Year() && !p.Time.Equal(w.Time) {
 					t.Errorf("point %d: time %v, exiftool %v", p.Index, p.Time, w.Time)
 				}
+			}
+			for j < len(want) && (want[j].Lat == 0 || want[j].Lon == 0) {
+				j++
 			}
 			if j != len(want) {
 				t.Errorf("matched %d of %d exiftool points", j, len(want))

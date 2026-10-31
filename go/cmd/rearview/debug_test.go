@@ -25,7 +25,8 @@ func TestDebugGPSAndFixture(t *testing.T) {
 		t.Fatal(err)
 	}
 	lines := strings.Split(strings.TrimSpace(out), "\n")
-	if lines[0] != "t_offset_s,ts_utc,lat,lon,speed_kmh,heading_deg" || len(lines) != 174 {
+	// 180 blocks minus 7 void records and 1 half-written one, plus the header.
+	if lines[0] != "t_offset_s,ts_utc,lat,lon,speed_kmh,heading_deg" || len(lines) != 173 {
 		t.Fatalf("got %d lines starting %q", len(lines), lines[0])
 	}
 

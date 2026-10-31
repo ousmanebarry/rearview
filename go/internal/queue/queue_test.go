@@ -99,7 +99,7 @@ func TestPlan(t *testing.T) {
 	b := add("b", 180*time.Second, true, false)
 	add("c", 360*time.Second, false, true)
 	d := add("d", 540*time.Second, false, false)
-	if _, err := db.ReplaceEvents(ctx, "motion", nil, []store.Event{
+	if _, err := db.ReplaceEvents(ctx, []string{"motion"}, nil, []store.Event{
 		{SegmentID: a.ID, Type: "hard_brake", Source: "motion", TS: t0.Add(100 * time.Second)},
 	}); err != nil {
 		t.Fatal(err)

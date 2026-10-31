@@ -47,33 +47,83 @@ func scanEvent(r scanner) (Event, error) {
 	return e, err
 }
 
-// ReplaceEvents deletes every event from source whose type is in types,
-// then inserts evs, in one transaction. It returns the new ids.
-func (db *DB) ReplaceEvents(ctx context.Context, source string, types []string, evs []Event) ([]int64, error) {
+// ReplaceEvents replaces every event whose source is in sources and whose type
+// is in types with evs, in one transaction (with no types, it only inserts).
+// A new event with the same type, camera and time as an old one updates that
+// row, so ids (and clips pointing at them) survive re-runs. It returns the ids.
+func (db *DB) ReplaceEvents(ctx context.Context, sources, types []string, evs []Event) ([]int64, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
+	old := map[string]int64{}
 	if len(types) > 0 {
-		q := `DELETE FROM events WHERE source = ? AND type IN (?` + strings.Repeat(",?", len(types)-1) + `)`
-		args := []any{source}
+		where := `source IN (?` + strings.Repeat(",?", len(sources)-1) + `) AND type IN (?` + strings.Repeat(",?", len(types)-1) + `)`
+		var args []any
+		for _, s := range sources {
+			args = append(args, s)
+		}
 		for _, t := range types {
 			args = append(args, t)
 		}
-		if _, err := tx.ExecContext(ctx, q, args...); err != nil {
+		rows, err := tx.QueryContext(ctx, `SELECT id, type, COALESCE(camera,''), ts_utc FROM events WHERE `+where, args...)
+		if err != nil {
+			return nil, err
+		}
+		for rows.Next() {
+			var id int64
+			var typ, cam, ts string
+			if err := rows.Scan(&id, &typ, &cam, &ts); err != nil {
+				rows.Close()
+				return nil, err
+			}
+			old[typ+"|"+cam+"|"+ts] = id
+		}
+		rows.Close()
+		if err := rows.Err(); err != nil {
 			return nil, err
 		}
 	}
 	ids := make([]int64, 0, len(evs))
 	for _, e := range evs {
-		id, err := insertEvent(ctx, tx, e)
+		k := e.Type + "|" + e.Camera + "|" + FormatTime(e.TS)
+		var id int64
+		if oldID, ok := old[k]; ok {
+			delete(old, k)
+			e.ID = oldID
+			id, err = oldID, updateEvent(ctx, tx, e)
+		} else {
+			id, err = insertEvent(ctx, tx, e)
+		}
 		if err != nil {
 			return nil, err
 		}
 		ids = append(ids, id)
 	}
+	for _, id := range old {
+		if _, err := tx.ExecContext(ctx, `DELETE FROM events WHERE id = ?`, id); err != nil {
+			return nil, err
+		}
+	}
 	return ids, tx.Commit()
+}
+
+func updateEvent(ctx context.Context, x execer, e Event) error {
+	var lat, lon any
+	if e.HasPos {
+		lat, lon = e.Lat, e.Lon
+	}
+	if e.Details == "" {
+		e.Details = "{}"
+	}
+	_, err := x.ExecContext(ctx, `UPDATE events SET trip_id = ?, segment_id = ?, source = ?, t_start_s = ?, t_end_s = ?,
+		score = ?, lat = ?, lon = ?, details_json = ? WHERE id = ?`,
+		nullID(e.TripID), e.SegmentID, e.Source, e.TStartS, e.TEndS, e.Score, lat, lon, e.Details, e.ID)
+	if err != nil {
+		return fmt.Errorf("update %s event %d: %w", e.Type, e.ID, err)
+	}
+	return nil
 }
 
 type execer interface {

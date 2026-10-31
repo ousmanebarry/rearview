@@ -168,10 +168,10 @@ func DecodeBlock(b []byte) (p Point, ok bool, err error) {
 	if math.Abs(p.Lat) > 90 || math.Abs(p.Lon) > 180 || bytes.IndexByte([]byte("NS"), ns) < 0 || bytes.IndexByte([]byte("EW"), ew) < 0 {
 		return p, false, fmt.Errorf("bad position %c%f %c%f", ns, p.Lat, ew, p.Lon)
 	}
-	// Records flagged 'A' with an all-zero position, speed and heading are
-	// dropouts too (72 of them in the first 235 files); one became a fake hard
-	// brake from 13 km/h.
-	if p.Lat == 0 && p.Lon == 0 {
+	// Records flagged 'A' with a zero latitude or longitude (and speed and
+	// heading 0) are dropouts too: 72 all-zero and 60 half-written ones in the
+	// first 235 files. One became a fake hard brake from 13 km/h.
+	if p.Lat == 0 || p.Lon == 0 {
 		return p, false, nil
 	}
 	return p, true, nil

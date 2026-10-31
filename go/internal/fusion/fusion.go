@@ -322,10 +322,7 @@ func Rebuild(ctx context.Context, db *store.DB, cfg Config) (int, error) {
 		}
 		all = append(all, Detect(in, cfg)...)
 	}
-	if _, err := db.ReplaceEvents(ctx, "fused", Types, nil); err != nil {
-		return 0, err
-	}
-	if _, err := db.ReplaceEvents(ctx, "vision", Types, all); err != nil {
+	if _, err := db.ReplaceEvents(ctx, []string{"vision", "fused"}, Types, all); err != nil {
 		return 0, err
 	}
 	return len(all), nil

@@ -85,7 +85,7 @@ func TestClipCommand(t *testing.T) {
 		t.Fatal(err)
 	}
 	segs, _ := db.Segments(ctx, 0)
-	ids, err := db.ReplaceEvents(ctx, "motion", nil, []store.Event{{
+	ids, err := db.ReplaceEvents(ctx, []string{"motion"}, nil, []store.Event{{
 		SegmentID: segs[0].ID, TripID: segs[0].TripID, Type: "hard_brake", Source: "motion",
 		TS: segs[0].StartedAt.Add(12 * time.Second), TStartS: 11, TEndS: 12, Score: 0.7,
 	}})
