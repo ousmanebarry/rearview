@@ -14,7 +14,7 @@ Goal: `rearview events --type near_miss` finds your real close calls with a meas
   - `src/geometry`: undistort the bottom-centre point of each box, then distance = focal length × real height ÷ box height (formula in Feature specs). Per-class heights in config (car about 1.5 m, truck and bus larger, person about 1.7 m).
   - Input needed: a field-test recording. Park behind a car, tape-measure 5, 10 and 15 m, and record 10 seconds at each distance.
   - Done when: estimates on the field test land within 20%, and the clip is saved in `testdata/` as a regression test.
-- [ ] **5.3 Time-to-collision [agent, you review]**
+- [x] **5.3 Time-to-collision [agent, you review]**
   - Use the tracker's smoothed height and height velocity: TTC = h ÷ (dh/dt), only when dh/dt > 0 (approaching) and the box is at least 40 px tall (smaller boxes are too noisy).
   - "In the path" = box bottom-centre inside a trapezoid in front of the car (configurable corners, drawn on the debug video). Ignore objects outside it.
   - Add `dist_m` and `ttc_s` to `frame` replies when requested.
