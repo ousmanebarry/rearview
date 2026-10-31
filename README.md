@@ -117,7 +117,7 @@ Point `~/rearview/config.yaml` at the engine (`engine: {path: ..., device: dml}`
 
 - **Small dataset**: 5.35 hours of one camera in one city over four days; 15 labels, all from a GPS-suggested candidate pass. Final numbers on the held-out day (2026-10-25) need labels for that day.
 - **Distance is uncalibrated**: until the checkerboard calibration and tape-measure test ([docs/notes/calibration-howto.md](docs/notes/calibration-howto.md)) are done, distance assumes a 100° pinhole lens, so following-distance events are indicative only. TTC doesn't depend on calibration.
-- **No near-miss labels**, so no precision/recall for near-miss, following and tailgating.
+- **No near-miss labels**, so no precision/recall for near-miss, following and tailgating. The full run over all footage flags 6 near-misses, 58 following-close and 44 tailgated moments; with an uncalibrated lens the two distance-based counts are certainly too high.
 - **No accelerometer** in this camera: G-forces are derived from 1 Hz GPS speed.
 - **Plates are blurred by region, not detected**: the lower-middle of every vehicle box is blurred.
 - The camera burns its own overlay (speed, GPS, its plate) into every frame.
