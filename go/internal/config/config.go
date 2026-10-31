@@ -197,7 +197,9 @@ func Default(home string) Config {
 		},
 		Following: Following{TimeS: 1.0, MinDurationS: 3, MinSpeedKmh: 50},
 		Search: Search{
-			PromptTemplate: "a dashcam photo of {query}",
+			// Plain query: with the hood cropped, the "a dashcam photo of {query}"
+			// template scored lower (docs/notes/7.md).
+			PromptTemplate: "{query}",
 			TopK:           50,
 			GroupS:         5,
 			KeyframeEveryS: 1,
