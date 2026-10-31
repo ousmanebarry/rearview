@@ -102,15 +102,37 @@ jobs:
           git -C $env:VCPKG_ROOT checkout $sha
           & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat" -disableMetrics
           New-Item -ItemType Directory -Force $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
-      - name: Cache vcpkg binaries
-        uses: actions/cache@v4
+      - name: Find Visual Studio
+        id: vs
+        shell: pwsh
+        run: |
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * `
+            -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -format json | ConvertFrom-Json
+          $generator = "Visual Studio $($vs.installationVersion.Split('.')[0]) $($vs.catalog.productLineVersion)"
+          "$generator ($($vs.installationVersion))"
+          "generator=$generator" >> $env:GITHUB_OUTPUT
+          "version=$($vs.installationVersion)" >> $env:GITHUB_OUTPUT
+      - name: Restore vcpkg binaries
+        id: vcpkg-cache
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
-          key: vcpkg-windows-${{ hashFiles('engine/vcpkg.json') }}
-          restore-keys: vcpkg-windows-
+          key: vcpkg-windows-${{ steps.vs.outputs.version }}-${{ hashFiles('engine/vcpkg.json') }}
+          restore-keys: |
+            vcpkg-windows-${{ steps.vs.outputs.version }}-
+            vcpkg-windows-
       - name: Configure, build, test
         working-directory: engine
+        # The presets name VS 2022; use whichever Visual Studio the runner image has.
         run: |
-          cmake --preset dev
+          cmake --preset dev -G "${{ steps.vs.outputs.generator }}"
+          if ($LASTEXITCODE) { exit 1 }
           cmake --build --preset dev
+          if ($LASTEXITCODE) { exit 1 }
           ctest --preset dev
+      - name: Save vcpkg binaries
+        if: always() && steps.vcpkg-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: ${{ steps.vcpkg-cache.outputs.cache-primary-key }}

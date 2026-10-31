@@ -47,18 +47,43 @@ jobs:
           git -C $env:VCPKG_ROOT checkout $sha
           & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat" -disableMetrics
           New-Item -ItemType Directory -Force $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
-      - name: Cache vcpkg binaries
-        uses: actions/cache@v4
+      # The presets name VS 2022 (what setup-windows.ps1 installs); runner images move to newer
+      # Visual Studio releases, so use whichever one the image has.
+      - name: Find Visual Studio
+        id: vs
+        shell: pwsh
+        run: |
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * `
+            -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -format json | ConvertFrom-Json
+          $generator = "Visual Studio $($vs.installationVersion.Split('.')[0]) $($vs.catalog.productLineVersion)"
+          "$generator ($($vs.installationVersion))"
+          "generator=$generator" >> $env:GITHUB_OUTPUT
+          "version=$($vs.installationVersion)" >> $env:GITHUB_OUTPUT
+      # vcpkg's package hashes include the compiler, so the key does too. Saved even when a later
+      # step fails: a cold vcpkg build takes over an hour.
+      - name: Restore vcpkg binaries
+        id: vcpkg-cache
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
-          key: vcpkg-windows-${{ hashFiles('engine/vcpkg.json') }}
-          restore-keys: vcpkg-windows-
+          key: vcpkg-windows-${{ steps.vs.outputs.version }}-${{ hashFiles('engine/vcpkg.json') }}
+          restore-keys: |
+            vcpkg-windows-${{ steps.vs.outputs.version }}-
+            vcpkg-windows-
       - name: Build the engine (DirectML build; runs on the CPU when there's no GPU)
         working-directory: engine
         run: |
-          cmake --preset dev-dml -DREARVIEW_BUILD_TESTS=OFF
+          cmake --preset dev-dml -G "${{ steps.vs.outputs.generator }}" -DREARVIEW_BUILD_TESTS=OFF
+          if ($LASTEXITCODE) { exit 1 }
           cmake --build --preset dev-dml
+          if ($LASTEXITCODE) { exit 1 }
           cmake --install build/dev-dml --config RelWithDebInfo --prefix ../dist/rearview
+      - name: Save vcpkg binaries
+        if: always() && steps.vcpkg-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: ${{ steps.vcpkg-cache.outputs.cache-primary-key }}
       - name: Build the CLI
         working-directory: go
         run: go build -trimpath -ldflags "-s -w -X main.version=$env:VERSION" -o ../dist/rearview/rearview.exe ./cmd/rearview
@@ -72,6 +97,10 @@ jobs:
         run: |
           ./engine.exe info
           if ($LASTEXITCODE) { exit 1 }
+          # The runner has the VC++ runtime installed; users may not, so it must be in the bundle.
+          foreach ($dll in 'vcruntime140.dll', 'msvcp140.dll', 'onnxruntime.dll', 'DirectML.dll') {
+            if (-not (Test-Path $dll)) { throw "$dll is missing from the bundle" }
+          }
           ./rearview.exe version
           $models = ./rearview.exe models | Select-Object -First 1
           $models
