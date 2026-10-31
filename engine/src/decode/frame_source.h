@@ -27,10 +27,13 @@ public:
     virtual int width() const = 0;
     virtual int height() const = 0;
     virtual double duration() const = 0;
+    // Changes the sampling rate from the next frame on (adaptive analysis rate).
+    virtual void set_sample_fps(double sample_fps) = 0;
 };
 
 // cv::VideoCapture with sampling: frames between samples are grabbed (demuxed and
 // decoded by FFmpeg, but not converted to BGR), which is the cheap part to skip.
+// open_source decoders: "opencv" (default), "ffmpeg" (hardware), "ffmpeg-sw".
 class OpenCvSource final : public FrameSource {
 public:
     // sample_fps <= 0 or >= the file's rate returns every frame.
@@ -43,6 +46,7 @@ public:
     int width() const override { return width_; }
     int height() const override { return height_; }
     double duration() const override { return frames_ / fps_; }
+    void set_sample_fps(double sample_fps) override;
 
 private:
     cv::VideoCapture cap_;

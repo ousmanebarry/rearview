@@ -31,6 +31,11 @@ Newest first; add a row whenever you make a call you'd want to explain later.
 
 | Date       | Decision                                                                                                                                              | Why                                                                                                            |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 2026-10-30 | GPU route: ONNX Runtime DirectML 1.24.4 (preset `dev-dml`, `--device dml`); MIGraphX via Windows ML not built | DirectML: 53 → 3 ms inference per frame, identical detections; inference is no longer the bottleneck. Windows ML needs the Windows App SDK runtime and EP catalogue (future work) |
+| 2026-10-30 | Default decoder stays OpenCV (software, frame-threaded); D3D11VA source kept behind `--decoder ffmpeg` | Hardware decode was 2.6× slower end to end: per-sample GPU→CPU copies and single-frame decoding vs 16 CPU threads |
+| 2026-10-30 | Engine pipeline threaded (decode / preprocess / inference+tracking) by default | −19% minutes per hour, results byte-identical |
+| 2026-10-30 | Adaptive idle fps implemented but off by default; batching not possible (static batch-1 YOLOX export) | Both measured: no gain while decoding dominates |
+| 2026-10-30 | Benchmark: CPU baseline 28.0 min per hour of footage (2 workers × 4 threads, 15-min subset); final 2.4 min per hour (DirectML, 2 workers, full 61.9-min set; repeat within 1.7%) | docs/notes/6.md, bench/results/ |
 | 2026-10-30 | Until `engine calibrate` has run on real board recordings, distance assumes a 100° horizontal FOV pinhole (fx 1,074 px at 2560 wide); truck height 2.0 m | 5.1/5.2 need owner recordings (docs/notes/calibration-howto.md); YOLOX "truck" is mostly pickups here |
 | 2026-10-30 | TTC is reported only for in-path objects; distance for all; Go re-checks the trapezoid for following distance | The plan says ignore objects outside the path for TTC; following/tailgating needs distance in the lane only |
 | 2026-10-30 | First fused run over the 30 motion-event windows: 0 near-misses, 1 following_close (0.73 s at 53 km/h), 1 tailgated (0.51 s at 77 km/h, rear) | No near-miss/following/tailgated labels exist yet, so no precision/recall (5.5 input needed) |
@@ -80,5 +85,5 @@ Fill in as you go; these become the README numbers.
 | Following close precision / recall         |       |         |      |
 | Distance error at 5 / 10 / 15 m            |       |         |      |
 | Search: correct moment in top 5            |       |         |      |
-| Minutes per hour of footage (CPU baseline) |       |         |      |
-| Minutes per hour of footage (final)        |       |         |      |
+| Minutes per hour of footage (CPU baseline) | 28.0 (2 workers × 4 threads) | 15 min of front footage (bench set, first 5 files), 10 fps analysis | 2026-10-30 |
+| Minutes per hour of footage (final)        | 2.4 (DirectML, 2 workers) | 61.9 min front footage (bench/set.txt), 10 fps analysis | 2026-10-30 |

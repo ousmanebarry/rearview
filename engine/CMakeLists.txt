@@ -16,16 +16,28 @@ find_package(OpenCV CONFIG REQUIRED COMPONENTS core imgproc imgcodecs videoio ca
 find_package(Eigen3 CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Threads REQUIRED)
+# FFmpeg libraries for the hardware-decoding frame source (vcpkg port "ffmpeg").
+find_path(FFMPEG_INCLUDE_DIR libavcodec/avcodec.h REQUIRED)
+set(FFMPEG_LIBS)
+foreach(lib avformat avcodec swscale avutil)
+  find_library(FFMPEG_${lib}_LIB ${lib} REQUIRED)
+  list(APPEND FFMPEG_LIBS ${FFMPEG_${lib}_LIB})
+endforeach()
 include(cmake/onnxruntime.cmake)
 
 add_library(engine_core STATIC
+  src/blur/blur.cpp
+  src/core/sysinfo.cpp
   src/debug/debug_writer.cpp
+  src/decode/ffmpeg_source.cpp
   src/decode/frame_source.cpp
   src/decode/probe.cpp
   src/detect/letterbox.cpp
   src/detect/nms.cpp
   src/detect/ort_env.cpp
   src/detect/yolox.cpp
+  src/embed/bpe.cpp
+  src/embed/clip.cpp
   src/geometry/calibration.cpp
   src/geometry/distance.cpp
   src/pipeline/analyzer.cpp
@@ -34,10 +46,13 @@ add_library(engine_core STATIC
   src/track/kalman.cpp
   src/track/tracker.cpp
 )
-target_include_directories(engine_core PUBLIC src)
+target_include_directories(engine_core PUBLIC src ${FFMPEG_INCLUDE_DIR})
 target_link_libraries(engine_core PUBLIC
   opencv_core opencv_imgproc opencv_imgcodecs opencv_videoio opencv_calib3d opencv_dnn opencv_objdetect
-  Eigen3::Eigen nlohmann_json::nlohmann_json onnxruntime::onnxruntime Threads::Threads)
+  Eigen3::Eigen nlohmann_json::nlohmann_json onnxruntime::onnxruntime Threads::Threads ${FFMPEG_LIBS})
+if(WIN32)
+  target_link_libraries(engine_core PUBLIC psapi)
+endif()
 target_compile_definitions(engine_core PUBLIC REARVIEW_ENGINE_VERSION="${PROJECT_VERSION}")
 
 add_executable(engine src/main.cpp)
@@ -50,12 +65,15 @@ if(REARVIEW_BUILD_TESTS)
   find_package(GTest CONFIG REQUIRED)
   add_executable(engine_tests
     tests/analyzer_test.cpp
+    tests/blur_test.cpp
+    tests/bpe_test.cpp
     tests/calibration_test.cpp
     tests/distance_test.cpp
     tests/frame_source_test.cpp
     tests/kalman_test.cpp
     tests/letterbox_test.cpp
     tests/nms_test.cpp
+    tests/pipeline_test.cpp
     tests/probe_test.cpp
     tests/server_test.cpp
     tests/tracker_test.cpp

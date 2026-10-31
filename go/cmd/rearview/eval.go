@@ -54,16 +54,22 @@ func newImportLabelsCmd() *cobra.Command {
 func newEvalCmd() *cobra.Command {
 	var typ, onlyDays, skipDays string
 	var tolS float64
+	var searchEval bool
+	var queries string
 	cmd := &cobra.Command{
-		Use:   "eval --type <event type>",
+		Use:   "eval --type <event type> | --search",
 		Short: "Compare detected events with the labels: precision, recall, misses and false alarms",
 		Long: "Compare detected events with the labels table (load it with import-labels first).\n" +
 			"A match is a detection within --tolerance seconds (3) of a label of the same type, one to one.\n" +
-			"--only-days / --skip-days take local dates (2026-10-25,2026-10-26) to report on or leave out the held-out set.",
+			"--only-days / --skip-days take local dates (2026-10-25,2026-10-26) to report on or leave out the held-out set.\n" +
+			"--search instead scores search against testdata/search_queries.csv (correct moment in the top 5).",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if searchEval {
+				return runSearchEval(cmd, queries)
+			}
 			if typ == "" {
-				return fmt.Errorf("--type is required")
+				return fmt.Errorf("--type or --search is required")
 			}
 			cfg, db, err := openDB(cmd.Context(), cmd)
 			if err != nil {
@@ -112,6 +118,8 @@ func newEvalCmd() *cobra.Command {
 	cmd.Flags().StringVar(&onlyDays, "only-days", "", "only these local dates")
 	cmd.Flags().StringVar(&skipDays, "skip-days", "", "leave out these local dates")
 	cmd.Flags().Float64Var(&tolS, "tolerance", 3, "match tolerance in seconds")
+	cmd.Flags().BoolVar(&searchEval, "search", false, "score search against the labelled queries")
+	cmd.Flags().StringVar(&queries, "queries", "", "search queries CSV (default <repo>/testdata/search_queries.csv)")
 	return cmd
 }
 

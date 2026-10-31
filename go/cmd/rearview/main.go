@@ -48,6 +48,10 @@ func newRootCmd(out, errOut io.Writer) *cobra.Command {
 		newImportLabelsCmd(),
 		newEvalCmd(),
 		newProcessCmd(),
+		newBenchCmd(),
+		newSearchCmd(),
+		newReportCmd(),
+		newExportCmd(),
 	)
 	return root
 }

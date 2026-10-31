@@ -4,6 +4,8 @@
 #include <cmath>
 #include <stdexcept>
 
+#include "decode/ffmpeg_source.h"
+
 namespace rearview::decode {
 
 OpenCvSource::OpenCvSource(const std::filesystem::path& path, double sample_fps)
@@ -81,12 +83,21 @@ std::optional<Frame> WindowedReader::next() {
 
 std::unique_ptr<FrameSource> open_source(const std::filesystem::path& path, double sample_fps,
                                          const std::string& decoder) {
+    if (decoder == "ffmpeg" || decoder == "ffmpeg-sw") {
+        auto src = std::make_unique<FfmpegSource>(path, sample_fps, decoder == "ffmpeg");
+        if (!src->is_open()) return nullptr;
+        return src;
+    }
     if (decoder != "opencv" && !decoder.empty()) {
         throw std::invalid_argument("unknown decoder: " + decoder);
     }
     auto src = std::make_unique<OpenCvSource>(path, sample_fps);
     if (!src->is_open()) return nullptr;
     return src;
+}
+
+void OpenCvSource::set_sample_fps(double sample_fps) {
+    step_ = (sample_fps > 0 && sample_fps < fps_) ? fps_ / sample_fps : 1.0;
 }
 
 }  // namespace rearview::decode

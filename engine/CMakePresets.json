@@ -19,6 +19,12 @@
       "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
     },
     {
+      "name": "dev-dml",
+      "displayName": "Windows dev with DirectML ONNX Runtime (--device dml)",
+      "inherits": "dev",
+      "cacheVariables": { "REARVIEW_ORT_DIRECTML": "ON" }
+    },
+    {
       "name": "ci-linux",
       "displayName": "Linux CI (Ninja)",
       "inherits": "base",
@@ -29,6 +35,7 @@
   ],
   "buildPresets": [
     { "name": "dev", "configurePreset": "dev", "configuration": "RelWithDebInfo" },
+    { "name": "dev-dml", "configurePreset": "dev-dml", "configuration": "RelWithDebInfo" },
     { "name": "ci-linux", "configurePreset": "ci-linux" }
   ],
   "testPresets": [

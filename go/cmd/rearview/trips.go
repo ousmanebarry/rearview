@@ -31,6 +31,9 @@ func newTripsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if withScore, _ := cmd.Flags().GetBool("score"); withScore {
+				return printScoreDetails(cmd, db, cfg, loc)
+			}
 			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 			fmt.Fprintln(w, "ID\tDATE\tSTART\tDURATION\tDISTANCE\tMAX SPEED")
 			for _, t := range ts {
@@ -41,6 +44,7 @@ func newTripsCmd() *cobra.Command {
 			return w.Flush()
 		},
 	}
+	cmd.Flags().Bool("score", false, "score every trip and show what each lost points for, plus a weekly trend")
 	cmd.AddCommand(newTripsExportCmd())
 	return cmd
 }

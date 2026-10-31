@@ -37,6 +37,7 @@ type Reply struct {
 	FramesDone int       `json:"frames_done,omitempty"`
 	Objects    []Object  `json:"objects,omitempty"`
 	Vector     []float32 `json:"vector,omitempty"`
+	Crop       string    `json:"crop,omitempty"`
 
 	// done
 	Frames    int                `json:"frames,omitempty"`
@@ -44,6 +45,8 @@ type Reply struct {
 	ElapsedMs int64              `json:"elapsed_ms,omitempty"`
 	Cancelled bool               `json:"cancelled,omitempty"`
 	StagesMs  map[string]float64 `json:"stages_ms,omitempty"`
+	PeakMemMB float64            `json:"peak_mem_mb,omitempty"`
+	Files     []string           `json:"files,omitempty"`
 	Path      string             `json:"path,omitempty"`
 
 	// error

@@ -120,6 +120,8 @@ type Search struct {
 	TopK           int     `yaml:"top_k"`
 	GroupS         float64 `yaml:"group_s"`
 	KeyframeEveryS float64 `yaml:"keyframe_every_s"`
+	// Crops is "three" (left, centre and right squares of each keyframe) or "center".
+	Crops string `yaml:"crops"`
 }
 
 type Score struct {
@@ -199,13 +201,14 @@ func Default(home string) Config {
 			TopK:           50,
 			GroupS:         5,
 			KeyframeEveryS: 1,
+			Crops:          "three",
 		},
 		Score: Score{
 			HardBrake:     4,
 			Swerve:        3,
 			NearMiss:      10,
 			FollowingMin:  2,
-			Tailgated:     1,
+			Tailgated:     0, // being tailgated isn't the driver's doing
 			PerKm:         100,
 			MinDistanceKm: 5,
 		},

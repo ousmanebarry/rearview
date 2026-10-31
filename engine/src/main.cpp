@@ -55,7 +55,7 @@ struct Args {
     double num(const std::string& k, double def) const { return has(k) ? std::stod(get(k)) : def; }
 };
 
-const std::vector<std::string> kBoolFlags{"--json", "--help", "--no-track"};
+const std::vector<std::string> kBoolFlags{"--json", "--help", "--no-track", "--serial", "--lazy"};
 
 Args parse(int argc, char** argv, int from) {
     Args a;
@@ -236,6 +236,8 @@ int cmd_detect(const Args& a, const fs::path& models) {
         for (std::string f; std::getline(ss, f, ',');) opt.features.push_back(f);
     }
     opt.camera = a.get("--camera", "front");
+    opt.threaded = !a.has("--serial");
+    opt.idle_fps = a.num("--idle-fps", 0);
     pipeline::Analyzer analyzer(detector_config(a, models), {}, geometry_config(a));
     const bool json = a.has("--json");
     long objects = 0;
@@ -266,8 +268,32 @@ int cmd_serve(const Args& a, const fs::path& models) {
 #endif
     std::ios::sync_with_stdio(false);
     const auto dcfg = detector_config(a, models);
-    pipeline::Analyzer analyzer(dcfg, {}, geometry_config(a));
-    std::map<std::string, protocol::Handler> handlers{{"analyze", protocol::analyze_handler(analyzer)}};
+    // --lazy defers loading YOLOX to the first analyze (search only needs CLIP text).
+    std::unique_ptr<pipeline::Analyzer> analyzer;
+    const auto geo = geometry_config(a);
+    if (!a.has("--lazy")) analyzer = std::make_unique<pipeline::Analyzer>(dcfg, track::TrackerConfig{}, geo);
+    protocol::Handler analyze = [&](const protocol::Json& c, protocol::JobEmitter& e, const std::atomic<bool>& cancel) {
+        if (!analyzer) analyzer = std::make_unique<pipeline::Analyzer>(dcfg, track::TrackerConfig{}, geo);
+        return protocol::analyze_handler(*analyzer)(c, e, cancel);
+    };
+    embed::Clip clip(fs::path(dcfg.model_path).parent_path(), dcfg.device, dcfg.threads);
+    std::unique_ptr<detect::Detector> blur_det;
+    std::unique_ptr<blur::Blurrer> blurrer;
+    auto get_blurrer = [&]() -> blur::Blurrer& {
+        if (!blurrer) {
+            blur_det = std::make_unique<detect::Detector>(dcfg);
+            blurrer = std::make_unique<blur::Blurrer>(
+                blur::BlurConfig{.face_model = fs::path(dcfg.model_path).parent_path() / "face_detection_yunet_2023mar.onnx"},
+                *blur_det);
+        }
+        return *blurrer;
+    };
+    std::map<std::string, protocol::Handler> handlers{
+        {"analyze", analyze},
+        {"blur", protocol::blur_handler(get_blurrer)},    {"embed_frames", protocol::embed_frames_handler(clip)},
+        {"embed_text", protocol::embed_text_handler(clip)},
+        {"extract_frames", protocol::extract_frames_handler()},
+    };
     std::vector<std::string> caps;
     for (const auto& [k, v] : handlers) caps.push_back(k);
     protocol::Server srv(std::cin, std::cout,

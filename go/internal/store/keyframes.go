@@ -7,7 +7,8 @@ import (
 	"math"
 )
 
-// KeyframeModel names the embedding model stored with each vector.
+// KeyframeModel names the embedding model stored with each vector. Left and
+// right crops of a three-crop run are stored as KeyframeModel + "/left" etc.
 const KeyframeModel = "clip-vit-b32"
 
 // Keyframe is one embedded frame: 512 floats, stored little-endian.
@@ -16,6 +17,7 @@ type Keyframe struct {
 	JobID     int64
 	SegmentID int64
 	TOffsetS  float64
+	Model     string // empty = KeyframeModel
 	Vector    []float32
 }
 
@@ -51,8 +53,12 @@ func (db *DB) InsertKeyframes(ctx context.Context, kfs []Keyframe) error {
 	}
 	defer tx.Rollback()
 	for _, k := range kfs {
+		model := k.Model
+		if model == "" {
+			model = KeyframeModel
+		}
 		if _, err := tx.ExecContext(ctx, `INSERT INTO keyframes (job_id, segment_id, t_offset_s, model, vector) VALUES (?,?,?,?,?)`,
-			nullID(k.JobID), k.SegmentID, k.TOffsetS, KeyframeModel, EncodeVector(k.Vector)); err != nil {
+			nullID(k.JobID), k.SegmentID, k.TOffsetS, model, EncodeVector(k.Vector)); err != nil {
 			return fmt.Errorf("insert keyframe: %w", err)
 		}
 	}
@@ -65,9 +71,13 @@ func (db *DB) DeleteKeyframes(ctx context.Context, jobID int64) error {
 	return err
 }
 
-// Keyframes loads every stored vector.
-func (db *DB) Keyframes(ctx context.Context) ([]Keyframe, error) {
-	rows, err := db.QueryContext(ctx, `SELECT id, COALESCE(job_id,0), segment_id, t_offset_s, vector FROM keyframes WHERE model = ? ORDER BY segment_id, t_offset_s`, KeyframeModel)
+// Keyframes loads stored vectors. With allCrops false only centre crops.
+func (db *DB) Keyframes(ctx context.Context, allCrops bool) ([]Keyframe, error) {
+	q := `SELECT id, COALESCE(job_id,0), segment_id, t_offset_s, model, vector FROM keyframes WHERE model = ?`
+	if allCrops {
+		q = `SELECT id, COALESCE(job_id,0), segment_id, t_offset_s, model, vector FROM keyframes WHERE model = ? OR model LIKE ? || '/%'`
+	}
+	rows, err := db.QueryContext(ctx, q+` ORDER BY segment_id, t_offset_s`, KeyframeModel, KeyframeModel)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +86,7 @@ func (db *DB) Keyframes(ctx context.Context) ([]Keyframe, error) {
 	for rows.Next() {
 		var k Keyframe
 		var b []byte
-		if err := rows.Scan(&k.ID, &k.JobID, &k.SegmentID, &k.TOffsetS, &b); err != nil {
+		if err := rows.Scan(&k.ID, &k.JobID, &k.SegmentID, &k.TOffsetS, &k.Model, &b); err != nil {
 			return nil, err
 		}
 		if k.Vector, err = DecodeVector(b); err != nil {

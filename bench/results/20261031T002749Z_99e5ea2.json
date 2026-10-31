@@ -1,0 +1,42 @@
+{
+  "label": "dml 2 workers serial engine",
+  "ran_at": "2026-10-31T00:27:49.6297887Z",
+  "git_sha": "99e5ea2ffd3953244daecc9d23d539a25b30d031",
+  "files": 5,
+  "footage_s": 900.031938,
+  "elapsed_s": 45.8,
+  "minutes_per_hour": 3.05,
+  "frames": 8429,
+  "fps": 184.1,
+  "stage_ms_per_frame": {
+    "decode": 2.064,
+    "geometry": 0.005,
+    "inference": 3.592,
+    "postprocess": 0.065,
+    "preprocess": 2.889,
+    "tracking": 0.019
+  },
+  "stage_fps": {
+    "decode": 484.4,
+    "geometry": 193325.7,
+    "inference": 278.4,
+    "postprocess": 15347.8,
+    "preprocess": 346.2,
+    "tracking": 52451.8
+  },
+  "worker_util": 0.857,
+  "peak_mem_mb": 364,
+  "gpu_util_pct": 47.5,
+  "failed": 0,
+  "config": {
+    "decoder": "opencv",
+    "device": "dml",
+    "engine": "C:\\dev\\rearview\\engine\\build\\dev-dml\\RelWithDebInfo\\engine.exe",
+    "files": 5,
+    "fps": 10,
+    "idle_fps": 0,
+    "threaded": false,
+    "threads": 0,
+    "workers": 2
+  }
+}

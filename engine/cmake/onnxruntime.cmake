@@ -39,9 +39,9 @@ elseif(REARVIEW_ORT_DIRECTML)
   endif()
   # DirectML is in maintenance mode; 1.24.4 is the last ORT build with it.
   _ort_fetch("https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.DirectML/1.24.4"
-    "${REARVIEW_ORT_DML_SHA256}" "ort-dml-1.24.4.zip" _ort_pkg)
+    57e9f11b73437bef7a309496135d4c1f96b1a8e9ddba60013fa27bfc1d788681 "ort-dml-1.24.4.zip" _ort_pkg)
   _ort_fetch("https://www.nuget.org/api/v2/package/Microsoft.AI.DirectML/1.15.4"
-    "${REARVIEW_DIRECTML_SHA256}" "directml-1.15.4.zip" _dml_pkg)
+    4e7cb7ddce8cf837a7a75dc029209b520ca0101470fcdf275c1f49736a3615b9 "directml-1.15.4.zip" _dml_pkg)
   set(_ort_inc "${_ort_pkg}/build/native/include")
   set(_ort_libdir "${_ort_pkg}/runtimes/win-x64/native")
   set(_ort_extra_dlls "${_dml_pkg}/bin/x64-win/DirectML.dll")

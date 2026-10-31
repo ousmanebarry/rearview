@@ -35,10 +35,21 @@ struct DetectTimings {
 std::vector<Detection> decode_yolox(const float* out, int rows, int cols, int input_size,
                                     const Letterbox& lb, float conf_threshold, float nms_iou);
 
+// One frame ready for the model: the NCHW blob and how it was letterboxed.
+struct Prepared {
+    std::vector<float> blob;
+    Letterbox lb;
+};
+
 class Detector {
 public:
     explicit Detector(const DetectorConfig& cfg);
     std::vector<Detection> detect(const cv::Mat& bgr);
+    // Letterbox + NCHW conversion. Thread-safe: touches no member state, so it can
+    // run on another thread while infer() runs.
+    Prepared prepare(const cv::Mat& bgr) const;
+    // Inference + decoding for prepared frames (one call, batched when the model allows).
+    std::vector<std::vector<Detection>> infer(const std::vector<const Prepared*>& frames);
     // Runs several frames in one inference call when the model has a dynamic batch.
     std::vector<std::vector<Detection>> detect_batch(const std::vector<cv::Mat>& frames);
     bool supports_batch() const { return dynamic_batch_; }

@@ -28,6 +28,10 @@ Json fake_analyze(const Json& cmd, JobEmitter& emit, const std::atomic<bool>& ca
         throw pipeline::AnalyzeError("file_not_found", "no such file: missing.mp4");
     }
     pipeline::AnalyzeSummary s;
+    if (cmd.value("path", "") == "slow.mp4") {
+        // Give the reader thread time to see a cancel that follows this command.
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
     for (int i = 0; i < 2; ++i) {
         if (cancel) {
             s.cancelled = true;
@@ -60,8 +64,6 @@ TEST(Server, EveryReplyType) {
         R"({"id":3,"cmd":"analyze","path":"missing.mp4"})"
         "\n"
         R"({"id":4,"cmd":"fly"})"
-        "\n"
-        R"({"id":5,"cmd":"shutdown"})"
         "\n");
     ASSERT_GE(r.size(), 8u);
     EXPECT_EQ(r[0]["type"], "ready");
@@ -83,7 +85,7 @@ TEST(Server, EveryReplyType) {
 
 TEST(Server, CancelStopsTheJob) {
     const auto r = serve(
-        R"({"id":9,"cmd":"analyze","path":"a.mp4"})"
+        R"({"id":9,"cmd":"analyze","path":"slow.mp4"})"
         "\n"
         R"({"id":10,"cmd":"cancel","target_id":9})"
         "\n");
@@ -92,6 +94,18 @@ TEST(Server, CancelStopsTheJob) {
     EXPECT_EQ(r[2]["type"], "done");
     EXPECT_EQ(r[2]["cancelled"], true);
     EXPECT_EQ(r[2]["id"], 9);
+}
+
+TEST(Server, ShutdownStopsReading) {
+    const auto r = serve(
+        R"({"id":1,"cmd":"ping"})"
+        "\n"
+        R"({"id":2,"cmd":"shutdown"})"
+        "\n"
+        R"({"id":3,"cmd":"ping"})"
+        "\n");
+    ASSERT_EQ(r.size(), 2u);
+    EXPECT_EQ(r[1]["id"], 1);
 }
 
 TEST(Server, BadRequests) {

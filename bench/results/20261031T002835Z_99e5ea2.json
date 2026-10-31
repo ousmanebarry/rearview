@@ -1,0 +1,42 @@
+{
+  "label": "dml 2 workers d3d11va decode",
+  "ran_at": "2026-10-31T00:28:35.4981893Z",
+  "git_sha": "99e5ea2ffd3953244daecc9d23d539a25b30d031",
+  "files": 5,
+  "footage_s": 900.031938,
+  "elapsed_s": 95.8,
+  "minutes_per_hour": 6.39,
+  "frames": 8437,
+  "fps": 88,
+  "stage_ms_per_frame": {
+    "decode": 19.009,
+    "geometry": 0.004,
+    "inference": 3.237,
+    "postprocess": 0.053,
+    "preprocess": 2.351,
+    "tracking": 0.014
+  },
+  "stage_fps": {
+    "decode": 52.6,
+    "geometry": 267841.3,
+    "inference": 308.9,
+    "postprocess": 19036.6,
+    "preprocess": 425.3,
+    "tracking": 71078.3
+  },
+  "worker_util": 0.842,
+  "peak_mem_mb": 197,
+  "gpu_util_pct": 24.9,
+  "failed": 0,
+  "config": {
+    "decoder": "ffmpeg",
+    "device": "dml",
+    "engine": "C:\\dev\\rearview\\engine\\build\\dev-dml\\RelWithDebInfo\\engine.exe",
+    "files": 5,
+    "fps": 10,
+    "idle_fps": 0,
+    "threaded": true,
+    "threads": 0,
+    "workers": 2
+  }
+}

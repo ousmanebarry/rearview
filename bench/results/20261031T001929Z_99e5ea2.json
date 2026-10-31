@@ -1,0 +1,42 @@
+{
+  "label": "cpu 2x4 threads",
+  "ran_at": "2026-10-31T00:19:29.363055Z",
+  "git_sha": "99e5ea2ffd3953244daecc9d23d539a25b30d031",
+  "files": 5,
+  "footage_s": 900.031938,
+  "elapsed_s": 419.9,
+  "minutes_per_hour": 28,
+  "frames": 8429,
+  "fps": 20.1,
+  "stage_ms_per_frame": {
+    "decode": 2.389,
+    "geometry": 0.007,
+    "inference": 86.801,
+    "postprocess": 0.034,
+    "preprocess": 3.14,
+    "tracking": 0.023
+  },
+  "stage_fps": {
+    "decode": 418.6,
+    "geometry": 134648.6,
+    "inference": 11.5,
+    "postprocess": 29247.1,
+    "preprocess": 318.5,
+    "tracking": 42786.8
+  },
+  "worker_util": 0.879,
+  "peak_mem_mb": 518,
+  "gpu_util_pct": 0.2,
+  "failed": 0,
+  "config": {
+    "decoder": "opencv",
+    "device": "cpu",
+    "engine": "C:\\dev\\rearview\\engine\\build\\dev\\RelWithDebInfo\\engine.exe",
+    "files": 5,
+    "fps": 10,
+    "idle_fps": 0,
+    "threaded": true,
+    "threads": 4,
+    "workers": 2
+  }
+}

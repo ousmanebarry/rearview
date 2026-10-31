@@ -16,6 +16,8 @@ type WorkerStats struct {
 	Frames   int64
 	FPS      float64 // analysed frames per second over its current job
 	Restarts int
+	// BusyTime is the time spent on jobs (finished or not) so far.
+	BusyTime time.Duration
 	started  time.Time
 	jobFrame int64
 }
@@ -35,6 +37,8 @@ type Stats struct {
 	// StagesMs sums the engine's per-stage times over finished jobs.
 	StagesMs map[string]float64
 	Errors   []string
+	// PeakMemMB is the largest engine peak working set reported.
+	PeakMemMB float64
 
 	mu    *sync.Mutex
 	queue *queue.Queue
@@ -112,6 +116,10 @@ func (s *Stats) finished(w int, r engine.Reply, err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.Workers[w].Busy = false
+	s.Workers[w].BusyTime += time.Since(s.Workers[w].started)
+	if r.PeakMemMB > s.PeakMemMB {
+		s.PeakMemMB = r.PeakMemMB
+	}
 	if err != nil {
 		s.Failed++
 		if len(s.Errors) < 20 {
@@ -129,5 +137,6 @@ func (s *Stats) interrupted(w int) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.Workers[w].Busy = false
+	s.Workers[w].BusyTime += time.Since(s.Workers[w].started)
 	s.Interrupted++
 }

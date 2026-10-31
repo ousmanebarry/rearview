@@ -64,35 +64,42 @@ std::vector<Detection> Detector::detect(const cv::Mat& bgr) {
     return std::move(detect_batch({bgr}).front());
 }
 
-std::vector<std::vector<Detection>> Detector::detect_batch(const std::vector<cv::Mat>& frames) {
+Prepared Detector::prepare(const cv::Mat& bgr) const {
+    Prepared p;
+    cv::Mat padded;
+    p.lb = letterbox(bgr, cfg_.input_size, padded);
+    to_nchw(padded, p.blob);
+    return p;
+}
+
+std::vector<std::vector<Detection>> Detector::infer(const std::vector<const Prepared*>& frames) {
+    std::vector<std::vector<Detection>> out;
+    if (frames.empty()) return out;
     if (frames.size() > 1 && !dynamic_batch_) {
-        std::vector<std::vector<Detection>> out;
-        DetectTimings sum;
-        for (const auto& f : frames) {
-            out.push_back(detect(f));
-            sum.preprocess_ms += timings_.preprocess_ms;
-            sum.inference_ms += timings_.inference_ms;
-            sum.postprocess_ms += timings_.postprocess_ms;
+        double inf = 0, post = 0;
+        for (const auto* f : frames) {
+            out.push_back(std::move(infer({f}).front()));
+            inf += timings_.inference_ms;
+            post += timings_.postprocess_ms;
         }
-        timings_ = sum;
+        timings_.inference_ms = inf;
+        timings_.postprocess_ms = post;
         return out;
     }
     const int n = static_cast<int>(frames.size());
     const int s = cfg_.input_size;
     auto t = Clock::now();
-    blob_.clear();
-    std::vector<Letterbox> lbs;
-    for (const auto& f : frames) {
-        lbs.push_back(letterbox(f, s, padded_));
-        to_nchw(padded_, blob_);
+    const float* data_in = frames[0]->blob.data();
+    size_t count = frames[0]->blob.size();
+    if (n > 1) {
+        blob_.clear();
+        for (const auto* f : frames) blob_.insert(blob_.end(), f->blob.begin(), f->blob.end());
+        data_in = blob_.data();
+        count = blob_.size();
     }
-    timings_.preprocess_ms = ms_since(t);
-
-    t = Clock::now();
     const std::array<int64_t, 4> shape{n, 3, s, s};
     auto mem = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-    auto input = Ort::Value::CreateTensor<float>(mem, blob_.data(), blob_.size(), shape.data(),
-                                                 shape.size());
+    auto input = Ort::Value::CreateTensor<float>(mem, const_cast<float*>(data_in), count, shape.data(), shape.size());
     const char* in_names[] = {input_name_.c_str()};
     const char* out_names[] = {output_name_.c_str()};
     auto outputs = session_->Run(Ort::RunOptions{nullptr}, in_names, &input, 1, out_names, 1);
@@ -103,14 +110,24 @@ std::vector<std::vector<Detection>> Detector::detect_batch(const std::vector<cv:
     const int rows = static_cast<int>(oshape[1]);
     const int cols = static_cast<int>(oshape[2]);
     const float* data = outputs[0].GetTensorData<float>();
-    std::vector<std::vector<Detection>> result;
     for (int i = 0; i < n; ++i) {
-        result.push_back(decode_yolox(data + static_cast<size_t>(i) * rows * cols, rows, cols, s,
-                                      lbs[static_cast<size_t>(i)], cfg_.conf_threshold,
-                                      cfg_.nms_iou));
+        out.push_back(decode_yolox(data + static_cast<size_t>(i) * rows * cols, rows, cols, s,
+                                   frames[static_cast<size_t>(i)]->lb, cfg_.conf_threshold, cfg_.nms_iou));
     }
     timings_.postprocess_ms = ms_since(t);
-    return result;
+    return out;
+}
+
+std::vector<std::vector<Detection>> Detector::detect_batch(const std::vector<cv::Mat>& frames) {
+    auto t = Clock::now();
+    std::vector<Prepared> ps;
+    for (const auto& f : frames) ps.push_back(prepare(f));
+    const double prep = ms_since(t);
+    std::vector<const Prepared*> ptrs;
+    for (const auto& p : ps) ptrs.push_back(&p);
+    auto out = infer(ptrs);
+    timings_.preprocess_ms = prep;
+    return out;
 }
 
 }  // namespace rearview::detect

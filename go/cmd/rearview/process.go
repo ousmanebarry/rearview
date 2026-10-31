@@ -220,6 +220,7 @@ func pipelineOptions(cfg config.Config, kind string) (pipeline.Options, func(), 
 		FPS:         cfg.Engine.FPS,
 		Features:    features,
 		EmbedEveryS: cfg.Search.KeyframeEveryS,
+		EmbedCrops:  cfg.Search.Crops,
 	}, close, nil
 }
 

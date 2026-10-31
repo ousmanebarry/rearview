@@ -1,0 +1,42 @@
+{
+  "label": "dml 2 workers idle 5 fps",
+  "ran_at": "2026-10-31T00:30:48.7892727Z",
+  "git_sha": "99e5ea2ffd3953244daecc9d23d539a25b30d031",
+  "files": 5,
+  "footage_s": 900.031938,
+  "elapsed_s": 37,
+  "minutes_per_hour": 2.47,
+  "frames": 8429,
+  "fps": 227.6,
+  "stage_ms_per_frame": {
+    "decode": 7.636,
+    "geometry": 0.008,
+    "inference": 4.741,
+    "postprocess": 0.105,
+    "preprocess": 5.268,
+    "tracking": 0.03
+  },
+  "stage_fps": {
+    "decode": 131,
+    "geometry": 130278.2,
+    "inference": 210.9,
+    "postprocess": 9525.4,
+    "preprocess": 189.8,
+    "tracking": 33528.2
+  },
+  "worker_util": 0.901,
+  "peak_mem_mb": 499,
+  "gpu_util_pct": 58.1,
+  "failed": 0,
+  "config": {
+    "decoder": "opencv",
+    "device": "dml",
+    "engine": "C:\\dev\\rearview\\engine\\build\\dev-dml\\RelWithDebInfo\\engine.exe",
+    "files": 5,
+    "fps": 10,
+    "idle_fps": 5,
+    "threaded": true,
+    "threads": 0,
+    "workers": 2
+  }
+}

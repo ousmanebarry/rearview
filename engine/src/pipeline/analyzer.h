@@ -54,6 +54,11 @@ struct AnalyzeOptions {
     std::vector<std::string> features{"detect", "track"};
     std::filesystem::path debug_video;  // empty = none
     std::string decoder = "opencv";
+    // Decode and preprocess on their own threads (identical results, more throughput).
+    bool threaded = true;
+    // Drop to idle_fps after idle_after frames with no detections; 0 = off.
+    double idle_fps = 0;
+    int idle_after = 20;
 };
 
 struct AnalyzeSummary {
@@ -61,6 +66,7 @@ struct AnalyzeSummary {
     double elapsed_ms = 0;
     bool cancelled = false;
     StageTimes stages;
+    double peak_mem_mb = 0;
 };
 
 struct Callbacks {

@@ -29,8 +29,12 @@ type Options struct {
 	Features []string
 	// EmbedEveryS is the keyframe spacing for embed_frames jobs.
 	EmbedEveryS float64
+	// EmbedCrops is "center" or "three" (left, centre, right).
+	EmbedCrops string
 	// FPSFor, when set, picks the analysis rate per job (Phase 6 scheduling).
 	FPSFor func(store.Job, store.Segment) float64
+	// AnalyzeExtra adds fields to every analyze command (threaded, idle_fps, decoder).
+	AnalyzeExtra map[string]any
 	// Log receives one line per finished job (nil = silent).
 	Log io.Writer
 	// FlushEvery is how many observations the writer buffers before a commit.
@@ -172,13 +176,17 @@ func buildJob(opt Options, j store.Job, seg store.Segment) engine.Job {
 		if every <= 0 {
 			every = 1
 		}
-		return engine.Job{Cmd: "embed_frames", Fields: map[string]any{"path": path, "every_sec": every}}
+		return engine.Job{Cmd: "embed_frames", Fields: map[string]any{"path": path, "every_sec": every, "crops": crops(opt.EmbedCrops)}}
 	default:
 		fps := opt.FPS
 		if opt.FPSFor != nil {
 			fps = opt.FPSFor(j, seg)
 		}
-		return engine.Analyze(path, seg.Camera, j.Windows, fps, opt.Features)
+		j := engine.Analyze(path, seg.Camera, j.Windows, fps, opt.Features)
+		for k, v := range opt.AnalyzeExtra {
+			j.Fields[k] = v
+		}
+		return j
 	}
 }
 
@@ -229,10 +237,16 @@ func write(db *store.DB, opt Options, st *Stats, results <-chan result) error {
 					keep(flush(r.job.ID))
 				}
 			case "embedding":
+				model := ""
+				if r.reply.Crop != "" && r.reply.Crop != "center" {
+					model = store.KeyframeModel + "/" + r.reply.Crop
+				}
 				kfs[r.job.ID] = append(kfs[r.job.ID], store.Keyframe{
-					JobID: r.job.ID, SegmentID: r.job.SegmentID, TOffsetS: deref(r.reply.T), Vector: r.reply.Vector,
+					JobID: r.job.ID, SegmentID: r.job.SegmentID, TOffsetS: deref(r.reply.T), Model: model, Vector: r.reply.Vector,
 				})
-				st.frame(r.worker, 0)
+				if model == "" {
+					st.frame(r.worker, 0)
+				}
 			case "progress":
 				st.progress(r.worker, r.reply.FramesDone)
 			}
@@ -263,6 +277,13 @@ func write(db *store.DB, opt Options, st *Stats, results <-chan result) error {
 		}
 	}
 	return firstErr
+}
+
+func crops(s string) string {
+	if s == "" {
+		return "center"
+	}
+	return s
 }
 
 func deref(p *float64) float64 {

@@ -54,8 +54,8 @@ void Server::reader() {
         queue_.push_back(std::move(cmd));
         cv_.notify_all();
     }
+    // End of input: finish what was queued (nobody can cancel it any more), then exit.
     std::lock_guard lock(mu_);
-    if (running_ != -1) cancel_ = true;
     closed_ = true;
     cv_.notify_all();
 }
