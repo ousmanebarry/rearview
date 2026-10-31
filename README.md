@@ -16,17 +16,17 @@ Near-miss and following-distance detection run end to end, but have no accuracy 
 $ rearview import D:\           # copy new recordings off the SD card, read the GPS hidden in each MP4
 new 235, skipped 0, failed 0
 19 trips
-17 motion events
+15 motion events
 
 $ rearview process              # detect and track objects on the GPU, distance + time-to-collision
 done 235, failed 0 ...
 
 $ rearview events --type hard_brake
 ID  TIME                 TYPE        SOURCE  SCORE  TRIP  LOCATION
-17  2026-10-25 22:02:46  hard_brake  motion  0.53   17    45.46047,-75.48923
+34  2026-10-25 22:02:46  hard_brake  motion  0.53   17    45.46047,-75.48923
 ...
-$ rearview clip 17              # 15 s clip, stream copy, under a second
-$ rearview report 17            # one-page PDF: key frames, speed and G graph, location
+$ rearview clip 34              # 15 s clip, stream copy, under a second
+$ rearview report 34            # one-page PDF: key frames, speed and G graph, location
 $ rearview search "a construction crane"
 ```
 
