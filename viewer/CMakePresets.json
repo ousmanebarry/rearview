@@ -1,0 +1,14 @@
+{
+	"version": 6,
+	"configurePresets": [
+		{
+			"name": "dev",
+			"displayName": "Windows dev (Visual Studio 2022, x64)",
+			"binaryDir": "${sourceDir}/build/${presetName}",
+			"generator": "Visual Studio 17 2022",
+			"architecture": "x64",
+			"toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+		}
+	],
+	"buildPresets": [{ "name": "dev", "configurePreset": "dev", "configuration": "RelWithDebInfo" }]
+}

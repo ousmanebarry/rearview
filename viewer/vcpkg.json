@@ -1,0 +1,29 @@
+{
+	"name": "rearview-viewer",
+	"version-string": "0.1.0",
+	"builtin-baseline": "817892b0ecbc6af994dd6df999c73faf795adbf2",
+	"dependencies": [
+		{
+			"name": "qtbase",
+			"default-features": false,
+			"features": [
+				"gui",
+				"widgets",
+				"network",
+				"sql-sqlite",
+				"png",
+				"jpeg",
+				"freetype",
+				"harfbuzz",
+				"concurrent",
+				"thread",
+				"testlib"
+			]
+		},
+		{
+			"name": "qtmultimedia",
+			"default-features": false,
+			"features": ["widgets"]
+		}
+	]
+}

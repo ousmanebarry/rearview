@@ -22,11 +22,11 @@ $ rearview process              # detect and track objects on the GPU, distance 
 done 235, failed 0 ...
 
 $ rearview events --type hard_brake
-ID  TIME                 TYPE        SOURCE  SCORE  TRIP  LOCATION
-34  2026-10-25 22:02:46  hard_brake  motion  0.53   17    45.46047,-75.48923
+ID   TIME                 TYPE        SOURCE  SCORE  TRIP  LOCATION
+157  2026-10-25 22:02:46  hard_brake  motion  0.53   17    45.46047,-75.48923
 ...
-$ rearview clip 34              # 15 s clip, stream copy, under a second
-$ rearview report 34            # one-page PDF: key frames, speed and G graph, location
+$ rearview clip 157             # 15 s clip, stream copy, under a second
+$ rearview report 157           # one-page PDF: key frames, speed and G graph, location
 $ rearview search "a construction crane"
 ```
 
@@ -102,6 +102,13 @@ cd ../go; go build -o bin/rearview.exe ./cmd/rearview; go test ./...
 
 Point `~/rearview/config.yaml` at the engine (`engine: {path: ..., device: dml}`), then `rearview import <SD card>`, `rearview process`, `rearview process --embed`, and explore with `events`, `clip`, `search`, `trips --score`, `report`, `export --blur`, `bench`. Every command has `--help`.
 
+The optional desktop viewer ([docs/notes/9.md](docs/notes/9.md)) plays a trip's front or rear footage with the tracked boxes, distance and TTC drawn on top, a clickable event timeline, the route on an OpenStreetMap map, and the search box:
+
+```powershell
+cd viewer; cmake --preset dev; cmake --build --preset dev   # builds Qt 6 through vcpkg the first time (~15 min)
+build/dev/RelWithDebInfo/viewer.exe --rearview ../go/bin/rearview.exe
+```
+
 ## Repository
 
 | Path                       | Contents                                                                                                                                                                         |
@@ -109,6 +116,7 @@ Point `~/rearview/config.yaml` at the engine (`engine: {path: ..., device: dml}`
 | [go/](go/)                 | `rearview` CLI and packages (`mp4gps`, `ingest`, `trips`, `prefilter`, `queue`, `engine`, `pipeline`, `fusion`, `search`, `report`, `bench`, `store`), the fake engine for tests |
 | [engine/](engine/)         | C++20 engine (`decode`, `detect`, `track`, `geometry`, `embed`, `blur`, `protocol`), GoogleTest suite                                                                            |
 | [protocol/](protocol/)     | the Go ↔ engine message spec                                                                                                                                                     |
+| [viewer/](viewer/)         | optional Qt 6 desktop viewer (video with overlays, timeline, map, search)                                                                                                        |
 | [docs/plan/](docs/plan/)   | the build plan, decisions log and results                                                                                                                                        |
 | [docs/notes/](docs/notes/) | a walkthrough of every core task                                                                                                                                                 |
 | [testdata/](testdata/)     | three 20-s test clips (Git LFS), GPS golden files, labels, tokenizer golden ids, search queries                                                                                  |
@@ -117,7 +125,7 @@ Point `~/rearview/config.yaml` at the engine (`engine: {path: ..., device: dml}`
 
 - **Small dataset**: 5.35 hours of one camera in one city over four days; 15 labels, all from a GPS-suggested candidate pass. Final numbers on the held-out day (2026-10-25) need labels for that day.
 - **Distance is uncalibrated**: until the checkerboard calibration and tape-measure test ([docs/notes/calibration-howto.md](docs/notes/calibration-howto.md)) are done, distance assumes a 100° pinhole lens, so following-distance events are indicative only. TTC doesn't depend on calibration.
-- **No near-miss labels**, so no precision/recall for near-miss, following and tailgating. The full run over all footage flags 6 near-misses, 58 following-close and 44 tailgated moments; with an uncalibrated lens the two distance-based counts are certainly too high.
+- **No near-miss labels**, so no precision/recall for near-miss, following and tailgating. The full run over all footage flags 6 near-misses, 58 following-close and 44 tailgated moments; with an uncalibrated lens the two distance-based counts may be off in either direction.
 - **No accelerometer** in this camera: G-forces are derived from 1 Hz GPS speed.
 - **Plates are blurred by region, not detected**: the lower-middle of every vehicle box is blurred.
 - The camera burns its own overlay (speed, GPS, its plate) into every frame.
