@@ -48,8 +48,18 @@ func TestCutStreamCopyIsFast(t *testing.T) {
 	if err := Cut(context.Background(), []Part{{city, 5, 15}}, out, Options{}); err != nil {
 		t.Fatal(err)
 	}
-	if el := time.Since(start); el > 2*time.Second {
-		t.Errorf("stream-copy cut took %v, want under 2 s", el)
+	el := time.Since(start)
+	// Target: under 2 s. A fixed limit fails on a loaded machine, so compare
+	// with decoding the same 10 s, which a stream copy must easily beat; an
+	// accidental re-encode would not.
+	start = time.Now()
+	if err := exec.Command("ffmpeg", "-v", "error", "-ss", "5", "-i", city, "-t", "10", "-f", "null", "-").Run(); err != nil {
+		t.Fatal(err)
+	}
+	decode := time.Since(start)
+	t.Logf("cut %v, decode %v", el, decode)
+	if el > 2*time.Second && el > decode/2 {
+		t.Errorf("stream-copy cut took %v (decoding the same span took %v), want under 2 s", el, decode)
 	}
 	dur, frames, _ := probe(t, out)
 	if dur < 9.9 || dur > 10.6 || frames < 297 || frames > 316 {

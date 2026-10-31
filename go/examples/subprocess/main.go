@@ -73,7 +73,8 @@ func run(ctx context.Context, w io.Writer) error {
 		}
 	}()
 
-	if msg, err := await(ctx, lines, time.Second); err != nil || msg != "ready" {
+	// Start-up gets a generous timeout: starting a process can take seconds on a busy machine.
+	if msg, err := await(ctx, lines, 10*time.Second); err != nil || msg != "ready" {
 		return fmt.Errorf("waiting for ready: got %q: %v", msg, err)
 	}
 	fmt.Fprintln(w, "child is ready")

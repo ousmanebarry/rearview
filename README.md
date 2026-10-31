@@ -2,11 +2,11 @@
 
 Rearview turns hours of dashcam footage into a searchable list of real driving events (hard braking, close following, tailgating, near-misses), with clips, incident reports and plain-English search, using a concurrent Go orchestrator and a C++ vision engine on the GPU.
 
-| | |
-| --- | --- |
-| **Hard-brake detection** | precision 1.00, recall 1.00 (9 of 9 labelled brakes; 4.2 h of footage; labels not yet owner-reviewed) |
-| **Search** | right moment in the top 5 for 5 of 24 drafted queries (21%; 5.35 h of front footage, 19,266 keyframes) |
-| **Speed** | 1 hour of 2560×1440 footage analysed in **2.4 minutes** (RX 9070 XT, DirectML; 28 min on the CPU) |
+|                          |                                                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| **Hard-brake detection** | precision 1.00, recall 1.00 (9 of 9 labelled brakes; 4.2 h of footage; labels not yet owner-reviewed)  |
+| **Search**               | right moment in the top 5 for 5 of 24 drafted queries (21%; 5.35 h of front footage, 19,266 keyframes) |
+| **Speed**                | 1 hour of 2560×1440 footage analysed in **2.4 minutes** (RX 9070 XT, DirectML; 28 min on the CPU)      |
 
 Near-miss and following-distance detection run end to end, but have no accuracy numbers yet: they need labelled events and a camera calibration ([what's missing](#limitations)). A demo video is planned ([docs/notes/demo-script.md](docs/notes/demo-script.md)).
 
@@ -54,11 +54,11 @@ flowchart LR
 
 ### Accuracy
 
-| Event | Precision | Recall | Data |
-| --- | --- | --- | --- |
-| Hard brake (GPS speed drop ≥ 10 km/h in 1 s) | 1.00 | 1.00 | 9 labels, 2026-10-23/24, 4.2 h |
-| Swerve | 1.00 | 0.17 | 6 labels, 5 of which sit on GPS heading glitches (under review) |
-| Near-miss, following close, tailgated | — | — | no labels yet |
+| Event                                        | Precision | Recall | Data                                                            |
+| -------------------------------------------- | --------- | ------ | --------------------------------------------------------------- |
+| Hard brake (GPS speed drop ≥ 10 km/h in 1 s) | 1.00      | 1.00   | 9 labels, 2026-10-23/24, 4.2 h                                  |
+| Swerve                                       | 1.00      | 0.17   | 6 labels, 5 of which sit on GPS heading glitches (under review) |
+| Near-miss, following close, tailgated        | —         | —      | no labels yet                                                   |
 
 How they were tuned: [docs/notes/2.6.md](docs/notes/2.6.md). The threshold fell from the plan's 14 to 10 km/h only after a filter for the GPS receiver's dropout records (heading exactly 0°, speed briefly 0 at 130 km/h) removed 30 false alarms. A later pass found three more kinds of dropout (all-zero positions, and 0 km/h / 0° records at low speed); three labels drafted from those were artefacts and were removed, which is why there are 9 brake labels and not 12. The labels were drafted from GPS candidates, so these numbers say the detector matches its own candidate list after review; an independent check needs labels from watching the video.
 
@@ -66,12 +66,12 @@ How they were tuned: [docs/notes/2.6.md](docs/notes/2.6.md). The threshold fell 
 
 CLIP ViT-B/32 on one keyframe per second, bottom 22% (hood and camera overlay) cropped off; share of 24 queries with the labelled ±5 s moment in the top 5 ([docs/notes/7.md](docs/notes/7.md)):
 
-| Variant | Hood kept | Hood cropped |
-| --- | --- | --- |
-| Centre crop, "a dashcam photo of …" | 5/24 (21%) | 3/24 (12%) |
-| Centre crop, plain query | 4/24 (17%) | 5/24 (21%) |
-| Three crops, "a dashcam photo of …" | 3/24 (12%) | 3/24 (12%) |
-| **Three crops, plain query (default)** | 2/24 (8%) | **5/24 (21%)** |
+| Variant                                | Hood kept  | Hood cropped   |
+| -------------------------------------- | ---------- | -------------- |
+| Centre crop, "a dashcam photo of …"    | 5/24 (21%) | 3/24 (12%)     |
+| Centre crop, plain query               | 4/24 (17%) | 5/24 (21%)     |
+| Three crops, "a dashcam photo of …"    | 3/24 (12%) | 3/24 (12%)     |
+| **Three crops, plain query (default)** | 2/24 (8%)  | **5/24 (21%)** |
 
 Well below the 70% target. The queries were drafted from contact sheets and each has a single labelled range, while most of them ("white pickup truck", "stop sign") occur dozens of times: a top-5 hit on another real pickup counts as a miss. A fairer test labels every occurrence of a few rare things. Searching 57,798 vectors (19,266 keyframes × 3 crops) takes 0.6–0.8 s including the CLIP text pass, plus 0.2–0.5 s to start the engine and load the index.
 
@@ -79,14 +79,14 @@ Well below the 70% target. The queries were drafted from contact sheets and each
 
 1 hour of 2560×1440 H.264 front footage, analysed at 10 fps with detection, tracking, distance and TTC ([bench/set.txt](bench/set.txt), [docs/notes/6.md](docs/notes/6.md)):
 
-| Change | Minutes per hour of footage | Speedup |
-| --- | --- | --- |
-| CPU baseline (7800X3D, 2 workers × 4 threads)¹ | 28.0 | 1.0× |
-| GPU inference: ONNX Runtime + DirectML on the RX 9070 XT¹ | 2.9 | 9.7× |
-| 2 engine workers¹ | 2.5 | 11.2× |
-| Same, threaded decode/preprocess inside the engine off¹ | 3.0 | 9.3× |
-| Hardware decoding (D3D11VA) instead of CPU decoding¹ | 6.4 | 4.4× (rejected) |
-| **Final, full 62-min set (repeat run within 1.7%)** | **2.4** | **11.7×** |
+| Change                                                    | Minutes per hour of footage | Speedup         |
+| --------------------------------------------------------- | --------------------------- | --------------- |
+| CPU baseline (7800X3D, 2 workers × 4 threads)¹            | 28.0                        | 1.0×            |
+| GPU inference: ONNX Runtime + DirectML on the RX 9070 XT¹ | 2.9                         | 9.7×            |
+| 2 engine workers¹                                         | 2.5                         | 11.2×           |
+| Same, threaded decode/preprocess inside the engine off¹   | 3.0                         | 9.3×            |
+| Hardware decoding (D3D11VA) instead of CPU decoding¹      | 6.4                         | 4.4× (rejected) |
+| **Final, full 62-min set (repeat run within 1.7%)**       | **2.4**                     | **11.7×**       |
 
 ¹ on the first 15 minutes of the set. Inference went from 53 to 3 ms per frame; decoding and resizing 1440p frames (8 + 6 ms) are now the bottleneck.
 
@@ -104,14 +104,14 @@ Point `~/rearview/config.yaml` at the engine (`engine: {path: ..., device: dml}`
 
 ## Repository
 
-| Path | Contents |
-| --- | --- |
-| [go/](go/) | `rearview` CLI and packages (`mp4gps`, `ingest`, `trips`, `prefilter`, `queue`, `engine`, `pipeline`, `fusion`, `search`, `report`, `bench`, `store`), the fake engine for tests |
-| [engine/](engine/) | C++20 engine (`decode`, `detect`, `track`, `geometry`, `embed`, `blur`, `protocol`), GoogleTest suite |
-| [protocol/](protocol/) | the Go ↔ engine message spec |
-| [docs/plan/](docs/plan/) | the build plan, decisions log and results |
-| [docs/notes/](docs/notes/) | a walkthrough of every core task |
-| [testdata/](testdata/) | three 20-s test clips (Git LFS), GPS golden files, labels, tokenizer golden ids, search queries |
+| Path                       | Contents                                                                                                                                                                         |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [go/](go/)                 | `rearview` CLI and packages (`mp4gps`, `ingest`, `trips`, `prefilter`, `queue`, `engine`, `pipeline`, `fusion`, `search`, `report`, `bench`, `store`), the fake engine for tests |
+| [engine/](engine/)         | C++20 engine (`decode`, `detect`, `track`, `geometry`, `embed`, `blur`, `protocol`), GoogleTest suite                                                                            |
+| [protocol/](protocol/)     | the Go ↔ engine message spec                                                                                                                                                     |
+| [docs/plan/](docs/plan/)   | the build plan, decisions log and results                                                                                                                                        |
+| [docs/notes/](docs/notes/) | a walkthrough of every core task                                                                                                                                                 |
+| [testdata/](testdata/)     | three 20-s test clips (Git LFS), GPS golden files, labels, tokenizer golden ids, search queries                                                                                  |
 
 ## Limitations
 

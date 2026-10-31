@@ -10,17 +10,17 @@ Target: 60–90 s, 1080p screen recording of a terminal (and the viewer, if buil
 
 ## Shot list
 
-| # | Time | Shot | Command / action | Caption |
-| --- | --- | --- | --- | --- |
-| 1 | 0–8 s | Title card over a frame of the highway clip | — | Rearview: what happened on my drives? |
-| 2 | 8–18 s | Import | `rearview import E:\` | Copies new recordings and reads the GPS hidden in each MP4 |
-| 3 | 18–30 s | Process with the progress view | `rearview process --only-windows` | Go schedules C++ engine workers on the GPU |
-| 4 | 30–40 s | Events found | `rearview events` | Hard brakes from GPS, tailgating and following distance from vision |
-| 5 | 40–52 s | Clip with boxes and TTC | `rearview clip 19` then play the `--debug-video` render of the same window (or the viewer: trip 12, event 14:07:04) | Tracked cars, distance and time-to-collision |
-| 6 | 52–60 s | Rear camera tailgater | `rearview export 18 --blur --camera rear`, play the result | Plates and faces blurred on export |
-| 7 | 60–72 s | Search | `rearview search "a construction crane"` then play the top hit (`--clip`) | Plain-English search over 19,266 keyframes with CLIP |
-| 8 | 72–80 s | Report + score | `rearview report 19`, open the PDF; `rearview trips --score` | One-page incident report, driving score |
-| 9 | 80–88 s | Numbers card | — | 1 h of 1440p footage in 2.4 min · hard brakes P/R 1.00 on 9 labels · search 21% top-5 |
+| #   | Time    | Shot                                        | Command / action                                                                                                    | Caption                                                                               |
+| --- | ------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 1   | 0–8 s   | Title card over a frame of the highway clip | —                                                                                                                   | Rearview: what happened on my drives?                                                 |
+| 2   | 8–18 s  | Import                                      | `rearview import E:\`                                                                                               | Copies new recordings and reads the GPS hidden in each MP4                            |
+| 3   | 18–30 s | Process with the progress view              | `rearview process --only-windows`                                                                                   | Go schedules C++ engine workers on the GPU                                            |
+| 4   | 30–40 s | Events found                                | `rearview events`                                                                                                   | Hard brakes from GPS, tailgating and following distance from vision                   |
+| 5   | 40–52 s | Clip with boxes and TTC                     | `rearview clip 19` then play the `--debug-video` render of the same window (or the viewer: trip 12, event 14:07:04) | Tracked cars, distance and time-to-collision                                          |
+| 6   | 52–60 s | Rear camera tailgater                       | `rearview export 18 --blur --camera rear`, play the result                                                          | Plates and faces blurred on export                                                    |
+| 7   | 60–72 s | Search                                      | `rearview search "a construction crane"` then play the top hit (`--clip`)                                           | Plain-English search over 19,266 keyframes with CLIP                                  |
+| 8   | 72–80 s | Report + score                              | `rearview report 19`, open the PDF; `rearview trips --score`                                                        | One-page incident report, driving score                                               |
+| 9   | 80–88 s | Numbers card                                | —                                                                                                                   | 1 h of 1440p footage in 2.4 min · hard brakes P/R 1.00 on 9 labels · search 21% top-5 |
 
 Debug render for shot 5: the engine draws boxes, track ids, distance and TTC with
 `engine detect <file> --from <s> --to <s+15> --device dml --features detect,track,distance,ttc --debug-video out.mp4` (without `--features` only boxes and track ids are drawn). Checked on event 19 (`--from 148 --to 160`): the car ahead reads `#4 car 12.6m ttc 7.4s` at 59 km/h, with the path trapezoid drawn; 120 frames in about 4 s. The file and offset of event 19:

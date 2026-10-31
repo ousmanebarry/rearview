@@ -1,6 +1,6 @@
 # Rearview: notes from building a dashcam analyser in Go and C++
 
-*Draft written from [plan/decisions.md](plan/decisions.md) and [notes/](notes/). Rewrite it in your own voice before publishing.*
+_Draft written from [plan/decisions.md](plan/decisions.md) and [notes/](notes/). Rewrite it in your own voice before publishing._
 
 I have a two-channel dashcam (VIOFO A229 Plus, 2560×1440 front and rear) and 5.35 hours of footage from four days of ordinary driving. Rearview imports it, finds the moments worth looking at (hard brakes, following too close, being tailgated, near-misses), cuts clips and one-page reports, and lets me search the video in plain English. A Go program does the coordination; a C++ engine does the pixels; they talk over JSON lines on stdin/stdout.
 
@@ -20,7 +20,7 @@ What I'd tell someone else: **plot the raw signal before you tune anything**, an
 
 ## 2. Getting time-to-collision to stop crying wolf
 
-The near-miss signal is time-to-collision from box growth: if an object at distance *d* closes at speed *v*, its image height *h* is proportional to 1/*d*, so (dh/dt)/h = v/d = 1/TTC. That needs no camera calibration and no assumed car height, which matters because my calibration is still a 100° pinhole guess.
+The near-miss signal is time-to-collision from box growth: if an object at distance _d_ closes at speed _v_, its image height _h_ is proportional to 1/_d_, so (dh/dt)/h = v/d = 1/TTC. That needs no camera calibration and no assumed car height, which matters because my calibration is still a 100° pinhole guess.
 
 The formula is easy. Most of the work was removing the reasons it fires on nothing:
 
@@ -36,16 +36,16 @@ Result: over every analysed event window, no near-miss fired; stopping behind a 
 
 The target was to analyse an hour of 1440p footage in under 10 minutes. `rearview bench` runs the real pipeline on a fixed 62-minute set and records minutes per hour of footage, per-stage times from the engine, worker utilisation, GPU utilisation and peak memory, so every change was measured the same way. Two runs on the same commit agree within 1.7%.
 
-| Step | Minutes per hour |
-| --- | --- |
-| CPU, 2 workers × 4 ONNX Runtime threads | 28.0 |
-| DirectML on the RX 9070 XT | 2.9 |
-| 2 engine workers instead of 1 | 2.5 |
-| Final, full set | **2.4** |
+| Step                                    | Minutes per hour |
+| --------------------------------------- | ---------------- |
+| CPU, 2 workers × 4 ONNX Runtime threads | 28.0             |
+| DirectML on the RX 9070 XT              | 2.9              |
+| 2 engine workers instead of 1           | 2.5              |
+| Final, full set                         | **2.4**          |
 
 DirectML took inference from 53 ms to 3 ms per frame, with bit-identical detections on the test clip. After that, inference wasn't the problem, and the next three ideas all failed for the same reason:
 
-- **Hardware decoding (D3D11VA)** made it 2.6× *slower*. OpenCV's software decoder spreads frame threads over 16 hardware threads and skips colour conversion for frames we don't sample; the GPU path decodes one frame at a time and copies every sampled 1440p frame back to the CPU. It also produced washed-out colours until I noticed the camera writes full-range YUV and the GPU frames lose that flag. Kept behind a flag, off by default.
+- **Hardware decoding (D3D11VA)** made it 2.6× _slower_. OpenCV's software decoder spreads frame threads over 16 hardware threads and skips colour conversion for frames we don't sample; the GPU path decodes one frame at a time and copies every sampled 1440p frame back to the CPU. It also produced washed-out colours until I noticed the camera writes full-range YUV and the GPU frames lose that flag. Kept behind a flag, off by default.
 - **Dropping to 5 fps on empty road** saved nothing (2.47 vs 2.46): skipping inference doesn't skip decoding, and H.264 must decode every frame.
 - **Batched inference** wasn't possible: the released YOLOX-s export has a fixed batch of 1, and re-exporting needs Python.
 

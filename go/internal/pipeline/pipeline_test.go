@@ -136,9 +136,13 @@ func TestFailuresAreRecorded(t *testing.T) {
 
 func TestCancelThenResume(t *testing.T) {
 	db := setup(t, 20)
-	ctx, cancel := context.WithTimeout(context.Background(), 700*time.Millisecond)
+	// Cancel once the first job has finished (not after a fixed time, which
+	// is flaky on a loaded machine where engine start-up is slow).
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	st, err := Run(ctx, db, opts(2, "-delay", "50ms"))
+	o := opts(2, "-delay", "50ms")
+	o.Log = cancelWriter(cancel)
+	st, err := Run(ctx, db, o)
 	if err == nil {
 		t.Fatal("want a cancellation error")
 	}
@@ -159,6 +163,14 @@ func TestCancelThenResume(t *testing.T) {
 	if n := count(t, db, `SELECT COUNT(*) FROM observations`); n != 200 {
 		t.Errorf("%d observations, want 200 with no duplicates", n)
 	}
+}
+
+// cancelWriter is a Log writer that cancels the run on the first line.
+type cancelWriter context.CancelFunc
+
+func (c cancelWriter) Write(b []byte) (int, error) {
+	c()
+	return len(b), nil
 }
 
 func TestResumeAfterHardKill(t *testing.T) {
