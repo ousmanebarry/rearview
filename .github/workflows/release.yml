@@ -55,7 +55,11 @@ jobs:
         run: |
           $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * `
             -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -format json | ConvertFrom-Json
-          $generator = "Visual Studio $($vs.installationVersion.Split('.')[0]) $($vs.catalog.productLineVersion)"
+          $major = $vs.installationVersion.Split('.')[0]
+          # The generator's exact name comes from CMake: vswhere's product line isn't always the year.
+          $m = cmake --help | Select-String "^\*?\s*(Visual Studio $major \d{4})\s*=" | Select-Object -First 1
+          if (-not $m) { throw "CMake has no generator for Visual Studio $major ($($vs.installationVersion))" }
+          $generator = $m.Matches[0].Groups[1].Value
           "$generator ($($vs.installationVersion))"
           "generator=$generator" >> $env:GITHUB_OUTPUT
           "version=$($vs.installationVersion)" >> $env:GITHUB_OUTPUT
