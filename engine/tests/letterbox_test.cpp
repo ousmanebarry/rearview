@@ -1,8 +1,8 @@
+#include "detect/letterbox.h"
+
 #include <gtest/gtest.h>
 
 #include <opencv2/core.hpp>
-
-#include "detect/letterbox.h"
 
 using namespace rearview;
 using namespace rearview::detect;

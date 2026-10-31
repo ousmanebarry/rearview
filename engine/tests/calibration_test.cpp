@@ -1,10 +1,10 @@
+#include "geometry/calibration.h"
+
 #include <gtest/gtest.h>
 
 #include <filesystem>
 #include <opencv2/calib3d.hpp>
 #include <opencv2/imgproc.hpp>
-
-#include "geometry/calibration.h"
 
 using namespace rearview::geometry;
 namespace fs = std::filesystem;
@@ -19,13 +19,15 @@ cv::Mat render(double f, cv::Size size, cv::Vec3d rvec, cv::Vec3d tvec) {
     const int cols = 10, rows = 7;
     // A white margin around the board helps the detector, as on a printed sheet.
     const int margin = static_cast<int>(sq * ppm);
-    cv::Mat tex(rows * static_cast<int>(sq * ppm) + 2 * margin, cols * static_cast<int>(sq * ppm) + 2 * margin,
-                CV_8UC1, cv::Scalar(255));
+    cv::Mat tex(rows * static_cast<int>(sq * ppm) + 2 * margin,
+                cols * static_cast<int>(sq * ppm) + 2 * margin, CV_8UC1, cv::Scalar(255));
     for (int y = 0; y < rows; ++y) {
         for (int x = 0; x < cols; ++x) {
             if ((x + y) % 2 == 0) {
-                cv::rectangle(tex, cv::Rect(margin + x * static_cast<int>(sq * ppm), margin + y * static_cast<int>(sq * ppm),
-                                            static_cast<int>(sq * ppm), static_cast<int>(sq * ppm)),
+                cv::rectangle(tex,
+                              cv::Rect(margin + x * static_cast<int>(sq * ppm),
+                                       margin + y * static_cast<int>(sq * ppm),
+                                       static_cast<int>(sq * ppm), static_cast<int>(sq * ppm)),
                               cv::Scalar(0), cv::FILLED);
             }
         }
@@ -35,12 +37,14 @@ cv::Mat render(double f, cv::Size size, cv::Vec3d rvec, cv::Vec3d tvec) {
     cv::Matx33d R;
     cv::Rodrigues(rvec, R);
     const cv::Matx33d K(f, 0, size.width / 2.0, 0, f, size.height / 2.0, 0, 0, 1);
-    const cv::Matx33d Rt(R(0, 0), R(0, 1), tvec[0], R(1, 0), R(1, 1), tvec[1], R(2, 0), R(2, 1), tvec[2]);
+    const cv::Matx33d Rt(R(0, 0), R(0, 1), tvec[0], R(1, 0), R(1, 1), tvec[1], R(2, 0), R(2, 1),
+                         tvec[2]);
     // texture px -> board metres (relative to the first inner corner) -> image px
     const cv::Matx33d T(1.0 / ppm, 0, -ox, 0, 1.0 / ppm, -oy, 0, 0, 1);
     const cv::Matx33d H = K * Rt * T;
     cv::Mat img, bgr;
-    cv::warpPerspective(tex, img, cv::Mat(H), size, cv::INTER_AREA, cv::BORDER_CONSTANT, cv::Scalar(90));
+    cv::warpPerspective(tex, img, cv::Mat(H), size, cv::INTER_AREA, cv::BORDER_CONSTANT,
+                        cv::Scalar(90));
     cv::cvtColor(img, bgr, cv::COLOR_GRAY2BGR);
     return bgr;
 }
@@ -52,7 +56,8 @@ TEST(Calibration, RecoversFocalLengthFromSyntheticBoards) {
     std::vector<cv::Mat> frames;
     for (int i = 0; i < 12; ++i) {
         const double a = (i % 4 - 1.5) * 0.25, b = (i / 4 - 1) * 0.25;
-        frames.push_back(render(1000, size, {b, a, 0.05 * (i % 3)}, {-0.12 + 0.02 * (i % 3), -0.08, 0.55 + 0.05 * (i % 4)}));
+        frames.push_back(render(1000, size, {b, a, 0.05 * (i % 3)},
+                                {-0.12 + 0.02 * (i % 3), -0.08, 0.55 + 0.05 * (i % 4)}));
     }
     CalibrateOptions opt;
     opt.square_mm = 30;

@@ -40,8 +40,8 @@ std::vector<Detection> decode_yolox(const float* out, int rows, int cols, int in
                 const float cy = (r[1] + static_cast<float>(gy)) * static_cast<float>(stride);
                 const float w = std::exp(r[2]) * static_cast<float>(stride);
                 const float h = std::exp(r[3]) * static_cast<float>(stride);
-                dets.push_back({lb.to_original({cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2}),
-                                best, conf});
+                dets.push_back(
+                    {lb.to_original({cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2}), best, conf});
             }
         }
     }
@@ -99,7 +99,8 @@ std::vector<std::vector<Detection>> Detector::infer(const std::vector<const Prep
     }
     const std::array<int64_t, 4> shape{n, 3, s, s};
     auto mem = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-    auto input = Ort::Value::CreateTensor<float>(mem, const_cast<float*>(data_in), count, shape.data(), shape.size());
+    auto input = Ort::Value::CreateTensor<float>(mem, const_cast<float*>(data_in), count,
+                                                 shape.data(), shape.size());
     const char* in_names[] = {input_name_.c_str()};
     const char* out_names[] = {output_name_.c_str()};
     auto outputs = session_->Run(Ort::RunOptions{nullptr}, in_names, &input, 1, out_names, 1);
@@ -112,7 +113,8 @@ std::vector<std::vector<Detection>> Detector::infer(const std::vector<const Prep
     const float* data = outputs[0].GetTensorData<float>();
     for (int i = 0; i < n; ++i) {
         out.push_back(decode_yolox(data + static_cast<size_t>(i) * rows * cols, rows, cols, s,
-                                   frames[static_cast<size_t>(i)]->lb, cfg_.conf_threshold, cfg_.nms_iou));
+                                   frames[static_cast<size_t>(i)]->lb, cfg_.conf_threshold,
+                                   cfg_.nms_iou));
     }
     timings_.postprocess_ms = ms_since(t);
     return out;

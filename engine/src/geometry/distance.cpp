@@ -49,7 +49,8 @@ std::optional<double> ttc_s(double h, double dh_dt, double min_h) {
 
 std::vector<cv::Point2f> PathRegion::pixels(int w, int h) const {
     std::vector<cv::Point2f> out;
-    for (const auto& c : corners) out.emplace_back(c.x * static_cast<float>(w), c.y * static_cast<float>(h));
+    for (const auto& c : corners)
+        out.emplace_back(c.x * static_cast<float>(w), c.y * static_cast<float>(h));
     return out;
 }
 

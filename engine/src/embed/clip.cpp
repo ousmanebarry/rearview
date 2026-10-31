@@ -56,7 +56,8 @@ void preprocess(const cv::Mat& bgr, float x_frac, std::vector<float>& out) {
             for (int c = 0; c < 3; ++c) {
                 // channel c of the output is RGB; OpenCV pixels are BGR
                 const float v = row[x][2 - c] / 255.0f;
-                out[base + static_cast<size_t>(c) * plane + off] = (v - kMean[static_cast<size_t>(c)]) / kStd[static_cast<size_t>(c)];
+                out[base + static_cast<size_t>(c) * plane + off] =
+                    (v - kMean[static_cast<size_t>(c)]) / kStd[static_cast<size_t>(c)];
             }
         }
     }
@@ -68,8 +69,8 @@ Clip::Clip(std::filesystem::path models_dir, std::string device, int threads)
 Ort::Session& Clip::vision() {
     if (!vision_) {
         auto so = detect::session_options(device_, threads_);
-        vision_ = std::make_unique<Ort::Session>(detect::ort_env(),
-                                                 detect::ort_path((dir_ / "clip_vision.onnx").string()).c_str(), so);
+        vision_ = std::make_unique<Ort::Session>(
+            detect::ort_env(), detect::ort_path((dir_ / "clip_vision.onnx").string()).c_str(), so);
     }
     return *vision_;
 }
@@ -77,8 +78,8 @@ Ort::Session& Clip::vision() {
 Ort::Session& Clip::text() {
     if (!text_) {
         auto so = detect::session_options(device_, threads_);
-        text_ = std::make_unique<Ort::Session>(detect::ort_env(),
-                                               detect::ort_path((dir_ / "clip_text.onnx").string()).c_str(), so);
+        text_ = std::make_unique<Ort::Session>(
+            detect::ort_env(), detect::ort_path((dir_ / "clip_text.onnx").string()).c_str(), so);
         tok_ = std::make_unique<BpeTokenizer>(dir_ / "clip_vocab.json", dir_ / "clip_merges.txt");
     }
     return *text_;
@@ -87,14 +88,17 @@ Ort::Session& Clip::text() {
 std::vector<Vector> Clip::embed_image(const cv::Mat& bgr, Crops crops) {
     // The bottom of a dashcam frame is our own hood and the camera's text overlay
     // (speed, GPS, plate, time); they are in every frame and only dilute the match.
-    const cv::Mat scene = bgr.rows > 2 * kSize ? bgr(cv::Rect(0, 0, bgr.cols, bgr.rows * 78 / 100)) : bgr;
-    std::vector<float> fracs = crops == Crops::Three ? std::vector<float>{0.0f, 0.5f, 1.0f} : std::vector<float>{0.5f};
+    const cv::Mat scene =
+        bgr.rows > 2 * kSize ? bgr(cv::Rect(0, 0, bgr.cols, bgr.rows * 78 / 100)) : bgr;
+    std::vector<float> fracs =
+        crops == Crops::Three ? std::vector<float>{0.0f, 0.5f, 1.0f} : std::vector<float>{0.5f};
     std::vector<float> blob;
     for (float f : fracs) preprocess(scene, f, blob);
     auto& s = vision();
     const std::array<int64_t, 4> shape{static_cast<int64_t>(fracs.size()), 3, kSize, kSize};
     auto mem = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-    auto input = Ort::Value::CreateTensor<float>(mem, blob.data(), blob.size(), shape.data(), shape.size());
+    auto input =
+        Ort::Value::CreateTensor<float>(mem, blob.data(), blob.size(), shape.data(), shape.size());
     const std::string in = name_of(s, true, 0);
     const char* in_names[] = {in.c_str()};
     const char* out_names[] = {"image_embeds"};
@@ -116,7 +120,8 @@ Vector Clip::embed_text(const std::string& t) {
     auto ids = tok_->encode_padded(t);
     const std::array<int64_t, 2> shape{1, static_cast<int64_t>(ids.size())};
     auto mem = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-    auto input = Ort::Value::CreateTensor<int64_t>(mem, ids.data(), ids.size(), shape.data(), shape.size());
+    auto input =
+        Ort::Value::CreateTensor<int64_t>(mem, ids.data(), ids.size(), shape.data(), shape.size());
     const std::string in = name_of(s, true, 0);
     const char* in_names[] = {in.c_str()};
     const char* out_names[] = {"text_embeds"};

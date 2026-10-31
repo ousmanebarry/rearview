@@ -45,7 +45,8 @@ std::optional<Frame> OpenCvSource::next() {
         f.index = idx;
         f.t = static_cast<double>(idx) / fps_;
         next_sample_ += step_;
-        if (next_sample_ < static_cast<double>(idx) + 0.5) next_sample_ = static_cast<double>(idx) + step_;
+        if (next_sample_ < static_cast<double>(idx) + 0.5)
+            next_sample_ = static_cast<double>(idx) + step_;
         return f;
     }
 }

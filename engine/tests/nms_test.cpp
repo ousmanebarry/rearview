@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "detect/nms.h"
+
+#include <gtest/gtest.h>
 
 using namespace rearview;
 using namespace rearview::detect;
@@ -30,9 +30,9 @@ TEST(NMS, SuppressesOverlapsOfSameClassOnly) {
 
 TEST(NMS, CarAndTruckOnOneVehicleMerge) {
     std::vector<Detection> d{
-        {{0, 0, 100, 100}, 2, 0.4f},  // car
-        {{2, 0, 100, 100}, 7, 0.6f},  // truck, same vehicle (IoU 0.98)
-        {{30, 0, 130, 100}, 2, 0.5f}, // a car partly overlapping (IoU 0.54): kept
+        {{0, 0, 100, 100}, 2, 0.4f},   // car
+        {{2, 0, 100, 100}, 7, 0.6f},   // truck, same vehicle (IoU 0.98)
+        {{30, 0, 130, 100}, 2, 0.5f},  // a car partly overlapping (IoU 0.54): kept
     };
     const auto kept = nms(d, 0.45f);
     ASSERT_EQ(kept.size(), 2u);

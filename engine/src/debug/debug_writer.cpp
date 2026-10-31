@@ -7,14 +7,22 @@ namespace rearview::debug {
 
 cv::Scalar class_color(int cls) {
     switch (cls) {
-        case 0: return {60, 60, 255};    // person: red
-        case 1: return {255, 160, 0};    // bicycle: blue
-        case 2: return {80, 220, 80};    // car: green
-        case 3: return {255, 0, 255};    // motorcycle: magenta
-        case 5: return {0, 200, 255};    // bus: orange
-        case 7: return {255, 255, 0};    // truck: cyan
-        case 9: return {0, 255, 255};    // traffic light: yellow
-        default: return {200, 200, 200};
+        case 0:
+            return {60, 60, 255};  // person: red
+        case 1:
+            return {255, 160, 0};  // bicycle: blue
+        case 2:
+            return {80, 220, 80};  // car: green
+        case 3:
+            return {255, 0, 255};  // motorcycle: magenta
+        case 5:
+            return {0, 200, 255};  // bus: orange
+        case 7:
+            return {255, 255, 0};  // truck: cyan
+        case 9:
+            return {0, 255, 255};  // traffic light: yellow
+        default:
+            return {200, 200, 200};
     }
 }
 

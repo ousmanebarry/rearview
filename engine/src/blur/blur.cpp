@@ -20,8 +20,8 @@ std::vector<Box> plate_regions(const std::vector<Detection>& dets) {
         if (!vehicle(d.cls)) continue;
         const Box& b = d.box;
         // Seen from behind or ahead, the plate sits in the lower middle of the vehicle.
-        out.push_back({b.x1 + 0.25f * b.width(), b.y1 + 0.55f * b.height(), b.x2 - 0.25f * b.width(),
-                       b.y1 + 0.95f * b.height()});
+        out.push_back({b.x1 + 0.25f * b.width(), b.y1 + 0.55f * b.height(),
+                       b.x2 - 0.25f * b.width(), b.y1 + 0.95f * b.height()});
     }
     return out;
 }
@@ -38,8 +38,8 @@ std::vector<Box> head_regions(const std::vector<Detection>& dets) {
 
 Box expand(const Box& b, float frac, int w, int h) {
     const float dx = b.width() * frac, dy = b.height() * frac;
-    return {std::max(0.0f, b.x1 - dx), std::max(0.0f, b.y1 - dy), std::min(static_cast<float>(w), b.x2 + dx),
-            std::min(static_cast<float>(h), b.y2 + dy)};
+    return {std::max(0.0f, b.x1 - dx), std::max(0.0f, b.y1 - dy),
+            std::min(static_cast<float>(w), b.x2 + dx), std::min(static_cast<float>(h), b.y2 + dy)};
 }
 
 void blur_boxes(cv::Mat& frame, const std::vector<Box>& boxes) {
@@ -80,13 +80,15 @@ std::vector<Box> RegionHold::update(const std::vector<Box>& seen) {
     return out;
 }
 
-Blurrer::Blurrer(BlurConfig cfg, detect::Detector& detector) : cfg_(std::move(cfg)), det_(detector) {}
+Blurrer::Blurrer(BlurConfig cfg, detect::Detector& detector)
+    : cfg_(std::move(cfg)), det_(detector) {}
 
 std::vector<Box> Blurrer::faces(const cv::Mat& frame) {
     const double s = std::min(1.0, static_cast<double>(cfg_.face_input_width) / frame.cols);
     const cv::Size size(static_cast<int>(frame.cols * s), static_cast<int>(frame.rows * s));
     if (!yunet_) {
-        yunet_ = cv::FaceDetectorYN::create(cfg_.face_model.string(), "", size, cfg_.face_score, 0.3f, 5000);
+        yunet_ = cv::FaceDetectorYN::create(cfg_.face_model.string(), "", size, cfg_.face_score,
+                                            0.3f, 5000);
         if (!yunet_) throw std::runtime_error("cannot load " + cfg_.face_model.string());
         yunet_size_ = size;
     }
@@ -101,14 +103,15 @@ std::vector<Box> Blurrer::faces(const cv::Mat& frame) {
     for (int i = 0; i < found.rows; ++i) {
         const float x = found.at<float>(i, 0), y = found.at<float>(i, 1);
         const float w = found.at<float>(i, 2), h = found.at<float>(i, 3);
-        out.push_back({static_cast<float>(x / s), static_cast<float>(y / s), static_cast<float>((x + w) / s),
-                       static_cast<float>((y + h) / s)});
+        out.push_back({static_cast<float>(x / s), static_cast<float>(y / s),
+                       static_cast<float>((x + w) / s), static_cast<float>((y + h) / s)});
     }
     return out;
 }
 
 BlurSummary Blurrer::run(const std::filesystem::path& in, const std::filesystem::path& out,
-                         const std::atomic<bool>* cancel, const std::function<void(double, long)>& progress) {
+                         const std::atomic<bool>* cancel,
+                         const std::function<void(double, long)>& progress) {
     using Clock = std::chrono::steady_clock;
     const auto start = Clock::now();
     cv::VideoCapture cap(in.string(), cv::CAP_FFMPEG);
@@ -116,7 +119,8 @@ BlurSummary Blurrer::run(const std::filesystem::path& in, const std::filesystem:
     const double fps = cap.get(cv::CAP_PROP_FPS) > 0 ? cap.get(cv::CAP_PROP_FPS) : 30;
     const cv::Size size(static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH)),
                         static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT)));
-    cv::VideoWriter writer(out.string(), cv::CAP_FFMPEG, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, size);
+    cv::VideoWriter writer(out.string(), cv::CAP_FFMPEG,
+                           cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, size);
     if (!writer.isOpened()) throw std::runtime_error("cannot write " + out.string());
     RegionHold hold(cfg_.hold_frames);
     BlurSummary sum;

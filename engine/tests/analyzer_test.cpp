@@ -1,17 +1,17 @@
+#include "pipeline/analyzer.h"
+
 #include <gtest/gtest.h>
 
 #include <filesystem>
-
-#include "pipeline/analyzer.h"
 
 using namespace rearview;
 namespace fs = std::filesystem;
 
 TEST(Analyzer, DropsOwnHoodOnly) {
     const std::vector<Detection> dets{
-        {{0, 1130, 2550, 1430}, 2, 0.5f},     // the hood: wide, bottom of the frame
-        {{1100, 900, 1500, 1300}, 2, 0.9f},   // a close car ahead: narrow
-        {{200, 600, 600, 800}, 2, 0.9f},      // a car further up
+        {{0, 1130, 2550, 1430}, 2, 0.5f},    // the hood: wide, bottom of the frame
+        {{1100, 900, 1500, 1300}, 2, 0.9f},  // a close car ahead: narrow
+        {{200, 600, 600, 800}, 2, 0.9f},     // a car further up
     };
     const auto kept = pipeline::drop_own_vehicle(dets, 2560, 1440);
     ASSERT_EQ(kept.size(), 2u);
@@ -28,16 +28,17 @@ TEST(Analyzer, CityClipKeepsOneIdForTheLeadVehicle) {
     // drifting from 210 to 135 px tall; it should keep a single id throughout.
     std::map<int, int> ids;
     long frames = 0;
-    a.run(opt, {.on_frame = [&](const pipeline::FrameResult& fr) {
-              const pipeline::ObjectResult* lead = nullptr;
-              for (const auto& o : fr.objects) {
-                  if (o.box.cx() > 1000 && o.box.cx() < 1560 &&
-                      (!lead || o.box.height() > lead->box.height())) {
-                      lead = &o;
-                  }
-              }
-              if (lead) ids[lead->track]++;
-          },
+    a.run(opt, {.on_frame =
+                    [&](const pipeline::FrameResult& fr) {
+                        const pipeline::ObjectResult* lead = nullptr;
+                        for (const auto& o : fr.objects) {
+                            if (o.box.cx() > 1000 && o.box.cx() < 1560 &&
+                                (!lead || o.box.height() > lead->box.height())) {
+                                lead = &o;
+                            }
+                        }
+                        if (lead) ids[lead->track]++;
+                    },
                 .on_progress = {}});
     for (const auto& [id, n] : ids) frames += n;
     ASSERT_GT(frames, 80);

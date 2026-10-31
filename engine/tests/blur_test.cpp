@@ -1,17 +1,18 @@
+#include "blur/blur.h"
+
 #include <gtest/gtest.h>
 
 #include <filesystem>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
 
-#include "blur/blur.h"
-
 using namespace rearview;
 using namespace rearview::blur;
 namespace fs = std::filesystem;
 
 TEST(Blur, PlateAndHeadRegions) {
-    const std::vector<Detection> dets{{{100, 100, 300, 260}, 2, 0.9f}, {{500, 100, 540, 220}, 0, 0.9f},
+    const std::vector<Detection> dets{{{100, 100, 300, 260}, 2, 0.9f},
+                                      {{500, 100, 540, 220}, 0, 0.9f},
                                       {{0, 0, 10, 10}, 9, 0.9f}};
     const auto plates = plate_regions(dets);
     ASSERT_EQ(plates.size(), 1u);

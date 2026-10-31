@@ -100,19 +100,20 @@ struct FfmpegSource::Impl {
         // The VIOFO streams are full range (yuvj420p); NV12 from the GPU loses the
         // J in its format, so carry the range over explicitly.
         const bool full_range = src->color_range == AVCOL_RANGE_JPEG ||
-                                src->format == AV_PIX_FMT_YUVJ420P || src->format == AV_PIX_FMT_YUVJ422P;
+                                src->format == AV_PIX_FMT_YUVJ420P ||
+                                src->format == AV_PIX_FMT_YUVJ422P;
         if (src->format == kHwFmt) {
             av_frame_unref(sw.get());
             if (av_hwframe_transfer_data(sw.get(), src, 0) < 0) return false;
             src = sw.get();
         }
-        sws.reset(sws_getCachedContext(sws.release(), src->width, src->height,
-                                       static_cast<AVPixelFormat>(src->format), src->width,
-                                       src->height, AV_PIX_FMT_BGR24, SWS_BILINEAR, nullptr,
-                                       nullptr, nullptr));
+        sws.reset(sws_getCachedContext(
+            sws.release(), src->width, src->height, static_cast<AVPixelFormat>(src->format),
+            src->width, src->height, AV_PIX_FMT_BGR24, SWS_BILINEAR, nullptr, nullptr, nullptr));
         if (!sws) return false;
         const int* coefs = sws_getCoefficients(SWS_CS_DEFAULT);
-        sws_setColorspaceDetails(sws.get(), coefs, full_range ? 1 : 0, coefs, 1, 0, 1 << 16, 1 << 16);
+        sws_setColorspaceDetails(sws.get(), coefs, full_range ? 1 : 0, coefs, 1, 0, 1 << 16,
+                                 1 << 16);
         out.create(src->height, src->width, CV_8UC3);
         uint8_t* dst[] = {out.data, nullptr, nullptr, nullptr};
         const int dst_stride[] = {static_cast<int>(out.step[0]), 0, 0, 0};
@@ -153,8 +154,9 @@ FfmpegSource::FfmpegSource(const std::filesystem::path& path, double sample_fps,
     p_->start_pts = st->start_time == AV_NOPTS_VALUE ? 0 : st->start_time;
     const AVRational r = st->avg_frame_rate.num ? st->avg_frame_rate : st->r_frame_rate;
     p_->fps = r.num && r.den ? av_q2d(r) : 30.0;
-    p_->frames = st->nb_frames > 0 ? static_cast<long>(st->nb_frames)
-                                   : static_cast<long>(static_cast<double>(f->duration) / AV_TIME_BASE * p_->fps);
+    p_->frames = st->nb_frames > 0
+                     ? static_cast<long>(st->nb_frames)
+                     : static_cast<long>(static_cast<double>(f->duration) / AV_TIME_BASE * p_->fps);
     p_->step = (sample_fps > 0 && sample_fps < p_->fps) ? p_->fps / sample_fps : 1.0;
     p_->frame.reset(av_frame_alloc());
     p_->sw.reset(av_frame_alloc());
@@ -176,7 +178,9 @@ void FfmpegSource::set_sample_fps(double sample_fps) {
 
 bool FfmpegSource::seek(double seconds) {
     const long target = std::max(0L, static_cast<long>(std::ceil(seconds * p_->fps - 1e-6)));
-    const int64_t ts = p_->start_pts + static_cast<int64_t>(std::llround(static_cast<double>(target) / p_->fps / av_q2d(p_->tb)));
+    const int64_t ts =
+        p_->start_pts +
+        static_cast<int64_t>(std::llround(static_cast<double>(target) / p_->fps / av_q2d(p_->tb)));
     if (av_seek_frame(p_->fmt.get(), p_->stream, ts, AVSEEK_FLAG_BACKWARD) < 0) return false;
     avcodec_flush_buffers(p_->dec.get());
     p_->eof = false;
@@ -199,7 +203,8 @@ std::optional<Frame> FfmpegSource::next() {
         f.index = idx;
         f.t = static_cast<double>(idx) / p_->fps;
         p_->next_sample += p_->step;
-        if (p_->next_sample < static_cast<double>(idx) + 0.5) p_->next_sample = static_cast<double>(idx) + p_->step;
+        if (p_->next_sample < static_cast<double>(idx) + 0.5)
+            p_->next_sample = static_cast<double>(idx) + p_->step;
         return f;
     }
     return std::nullopt;

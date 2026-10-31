@@ -44,9 +44,12 @@ inline Json stages_json(const pipeline::StageTimes& s) {
 
 inline Json done_json(const pipeline::AnalyzeSummary& s) {
     const double fps = s.elapsed_ms > 0 ? static_cast<double>(s.frames) * 1000.0 / s.elapsed_ms : 0;
-    return {{"type", "done"},           {"frames", s.frames},
-            {"fps", round_to(fps, 1)},  {"elapsed_ms", std::llround(s.elapsed_ms)},
-            {"cancelled", s.cancelled}, {"stages_ms", stages_json(s.stages)},
+    return {{"type", "done"},
+            {"frames", s.frames},
+            {"fps", round_to(fps, 1)},
+            {"elapsed_ms", std::llround(s.elapsed_ms)},
+            {"cancelled", s.cancelled},
+            {"stages_ms", stages_json(s.stages)},
             {"peak_mem_mb", round_to(s.peak_mem_mb, 0)}};
 }
 

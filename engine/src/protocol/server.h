@@ -44,7 +44,8 @@ private:
 // Runs one command. Streams intermediate replies (progress, frame, embedding)
 // through `emit` and returns the final `done` reply. Throws
 // pipeline::AnalyzeError for protocol errors.
-using Handler = std::function<Json(const Json& cmd, JobEmitter& emit, const std::atomic<bool>& cancel)>;
+using Handler =
+    std::function<Json(const Json& cmd, JobEmitter& emit, const std::atomic<bool>& cancel)>;
 
 struct ServerInfo {
     std::string engine_version;
@@ -57,7 +58,8 @@ struct ServerInfo {
 // a long job can be stopped.
 class Server {
 public:
-    Server(std::istream& in, std::ostream& out, ServerInfo info, std::map<std::string, Handler> handlers);
+    Server(std::istream& in, std::ostream& out, ServerInfo info,
+           std::map<std::string, Handler> handlers);
     // Returns when `shutdown` arrives or stdin closes.
     int run();
 

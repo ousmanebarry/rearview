@@ -38,8 +38,11 @@ Json vector_json(const embed::Vector& v) {
 
 Json simple_done(long frames, double elapsed_ms, bool cancelled) {
     const double fps = elapsed_ms > 0 ? static_cast<double>(frames) * 1000.0 / elapsed_ms : 0;
-    return {{"type", "done"},         {"frames", frames},           {"fps", round_to(fps, 1)},
-            {"elapsed_ms", std::llround(elapsed_ms)}, {"cancelled", cancelled}};
+    return {{"type", "done"},
+            {"frames", frames},
+            {"fps", round_to(fps, 1)},
+            {"elapsed_ms", std::llround(elapsed_ms)},
+            {"cancelled", cancelled}};
 }
 }  // namespace
 
@@ -50,8 +53,10 @@ Handler embed_frames_handler(embed::Clip& clip) {
         if (!(every > 0)) throw pipeline::AnalyzeError("bad_request", "every_sec must be positive");
         const std::string crops = cmd.value("crops", std::string("center"));
         const auto mode = crops == "three" ? embed::Crops::Three : embed::Crops::Center;
-        auto src = decode::open_source(path, 1.0 / every, cmd.value("decoder", std::string("opencv")));
-        if (!src) throw pipeline::AnalyzeError("decode_failed", "cannot open video: " + path.string());
+        auto src =
+            decode::open_source(path, 1.0 / every, cmd.value("decoder", std::string("opencv")));
+        if (!src)
+            throw pipeline::AnalyzeError("decode_failed", "cannot open video: " + path.string());
         decode::WindowedReader reader(*src, {});
         const auto start = Clock::now();
         auto last = start;
@@ -86,7 +91,8 @@ Handler embed_text_handler(embed::Clip& clip) {
             throw pipeline::AnalyzeError("bad_request", "embed_text needs text");
         }
         const auto start = Clock::now();
-        emit.send({{"type", "embedding"}, {"vector", vector_json(clip.embed_text(cmd["text"].get<std::string>()))}});
+        emit.send({{"type", "embedding"},
+                   {"vector", vector_json(clip.embed_text(cmd["text"].get<std::string>()))}});
         return simple_done(0, ms_since(start), false);
     };
 }
@@ -119,13 +125,16 @@ Handler extract_frames_handler() {
         const auto dir = utf8_path(cmd["out_dir"].get<std::string>());
         std::filesystem::create_directories(dir);
         auto src = decode::open_source(path, 0, "opencv");
-        if (!src) throw pipeline::AnalyzeError("decode_failed", "cannot open video: " + path.string());
+        if (!src)
+            throw pipeline::AnalyzeError("decode_failed", "cannot open video: " + path.string());
         const auto start = Clock::now();
         Json files = Json::array();
         for (size_t i = 0; i < times.size(); ++i) {
-            if (!src->seek(times[i])) throw pipeline::AnalyzeError("decode_failed", "seek failed", times[i]);
+            if (!src->seek(times[i]))
+                throw pipeline::AnalyzeError("decode_failed", "seek failed", times[i]);
             auto f = src->next();
-            if (!f) throw pipeline::AnalyzeError("decode_failed", "no frame at that time", times[i]);
+            if (!f)
+                throw pipeline::AnalyzeError("decode_failed", "no frame at that time", times[i]);
             const auto out = dir / std::format("frame_{:02}_{:.2f}.jpg", i, f->t);
             if (!cv::imwrite(out.string(), f->mat, {cv::IMWRITE_JPEG_QUALITY, 92})) {
                 throw pipeline::AnalyzeError("internal", "cannot write " + out.string());
@@ -154,7 +163,8 @@ pipeline::AnalyzeOptions parse_analyze(const Json& cmd) {
                 throw pipeline::AnalyzeError("bad_request", "each window is [start, end]");
             }
             const double a = w[0], b = w[1];
-            if (!(b > a)) throw pipeline::AnalyzeError("bad_request", "window end must be after start");
+            if (!(b > a))
+                throw pipeline::AnalyzeError("bad_request", "window end must be after start");
             opt.windows.emplace_back(a, b);
         }
     }

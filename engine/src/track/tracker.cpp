@@ -102,7 +102,8 @@ std::vector<TrackedObject> Tracker::update(const std::vector<Detection>& dets) {
             t.state = TrackState::Lost;
             if (++t.lost_frames > cfg_.max_lost) continue;
         } else if (t.state == TrackState::Confirmed) {
-            out.push_back({t.id, t.cls(), t.conf, t.kf.box(), t.kf.height(), t.kf.height_velocity()});
+            out.push_back(
+                {t.id, t.cls(), t.conf, t.kf.box(), t.kf.height(), t.kf.height_velocity()});
         }
         kept.push_back(std::move(t));
     }
@@ -111,7 +112,8 @@ std::vector<TrackedObject> Tracker::update(const std::vector<Detection>& dets) {
     for (int d : high) {
         if (det_used[static_cast<size_t>(d)]) continue;
         const auto& det = dets[static_cast<size_t>(d)];
-        Track t{next_id_++, TrackState::Tentative, KalmanBox(det.box), 1, 0, det.conf, {{det.cls, 1}}};
+        Track t{next_id_++, TrackState::Tentative, KalmanBox(det.box), 1, 0,
+                det.conf,   {{det.cls, 1}}};
         if (cfg_.confirm_hits <= 1) {
             t.state = TrackState::Confirmed;
             out.push_back({t.id, det.cls, det.conf, det.box, t.kf.height(), 0});

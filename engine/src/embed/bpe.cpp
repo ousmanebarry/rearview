@@ -44,7 +44,8 @@ std::vector<uint32_t> decode(const std::string& s) {
             continue;
         }
         uint32_t cp = n == 1 ? c : c & (0xFF >> (n + 1));
-        for (int k = 1; k < n; ++k) cp = (cp << 6) | (static_cast<unsigned char>(s[i + static_cast<size_t>(k)]) & 0x3F);
+        for (int k = 1; k < n; ++k)
+            cp = (cp << 6) | (static_cast<unsigned char>(s[i + static_cast<size_t>(k)]) & 0x3F);
         out.push_back(cp);
         i += static_cast<size_t>(n);
     }
@@ -82,7 +83,8 @@ uint32_t lower(uint32_t c) {
 
 }  // namespace
 
-BpeTokenizer::BpeTokenizer(const std::filesystem::path& vocab_json, const std::filesystem::path& merges_txt) {
+BpeTokenizer::BpeTokenizer(const std::filesystem::path& vocab_json,
+                           const std::filesystem::path& merges_txt) {
     std::ifstream vf(vocab_json);
     if (!vf) throw std::runtime_error("cannot read " + vocab_json.string());
     const auto v = nlohmann::json::parse(vf);
@@ -178,7 +180,8 @@ std::vector<std::string> BpeTokenizer::pre_tokenize(const std::string& cleaned) 
         } else if (is_digit(c)) {
             tok = utf8(cps[i++]);
         } else {
-            while (i < n && !is_space(cps[i]) && !is_letter(cps[i]) && !is_digit(cps[i])) tok += utf8(cps[i++]);
+            while (i < n && !is_space(cps[i]) && !is_letter(cps[i]) && !is_digit(cps[i]))
+                tok += utf8(cps[i++]);
         }
         out.push_back(std::move(tok));
     }

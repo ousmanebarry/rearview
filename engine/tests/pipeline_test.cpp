@@ -50,10 +50,15 @@ TEST(Analyzer, ThreadedMatchesSerial) {
     pipeline::Analyzer a({.model_path = kModel.string()});
     auto run = [&](bool threaded) {
         std::string out;
-        pipeline::AnalyzeOptions opt{.path = kCity, .windows = {{2.0, 6.0}}, .fps = 10,
+        pipeline::AnalyzeOptions opt{.path = kCity,
+                                     .windows = {{2.0, 6.0}},
+                                     .fps = 10,
                                      .features = {"detect", "track", "distance", "ttc"}};
         opt.threaded = threaded;
-        a.run(opt, {.on_frame = [&](const pipeline::FrameResult& fr) { out += protocol::frame_json(fr).dump() + "\n"; },
+        a.run(opt, {.on_frame =
+                        [&](const pipeline::FrameResult& fr) {
+                            out += protocol::frame_json(fr).dump() + "\n";
+                        },
                     .on_progress = {}});
         return out;
     };

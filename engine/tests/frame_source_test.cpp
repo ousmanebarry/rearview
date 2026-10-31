@@ -1,8 +1,8 @@
+#include "decode/frame_source.h"
+
 #include <gtest/gtest.h>
 
 #include <filesystem>
-
-#include "decode/frame_source.h"
 
 using namespace rearview::decode;
 namespace fs = std::filesystem;

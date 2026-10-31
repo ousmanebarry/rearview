@@ -35,9 +35,9 @@ void save_calibration(const Calibration& c, const std::filesystem::path& p);
 struct CalibrateOptions {
     cv::Size board{9, 6};  // inner corners
     double square_mm = 25;
-    int max_frames = 40;            // frames used for the solve
-    double min_sharpness = 50;      // variance of the Laplacian
-    int sample_every = 10;          // look at every Nth frame
+    int max_frames = 40;        // frames used for the solve
+    double min_sharpness = 50;  // variance of the Laplacian
+    int sample_every = 10;      // look at every Nth frame
 };
 
 struct CalibrateResult {

@@ -1,3 +1,5 @@
+#include "embed/bpe.h"
+
 #include <gtest/gtest.h>
 
 #include <filesystem>
@@ -5,7 +7,6 @@
 #include <nlohmann/json.hpp>
 #include <opencv2/videoio.hpp>
 
-#include "embed/bpe.h"
 #include "embed/clip.h"
 
 using namespace rearview::embed;
@@ -13,7 +14,9 @@ namespace fs = std::filesystem;
 
 namespace {
 const fs::path kModels = fs::path(REARVIEW_MODELS);
-bool have_tokenizer() { return fs::exists(kModels / "clip_vocab.json") && fs::exists(kModels / "clip_merges.txt"); }
+bool have_tokenizer() {
+    return fs::exists(kModels / "clip_vocab.json") && fs::exists(kModels / "clip_merges.txt");
+}
 }  // namespace
 
 TEST(Bpe, CleanAndSplit) {

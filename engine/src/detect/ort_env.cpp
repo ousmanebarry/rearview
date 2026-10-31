@@ -28,7 +28,8 @@ Ort::SessionOptions session_options(const std::string& device, int threads) {
         Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_DML(so, 0));
         return so;
 #else
-        throw std::runtime_error("device dml: engine built without DirectML (REARVIEW_ORT_DIRECTML=ON)");
+        throw std::runtime_error(
+            "device dml: engine built without DirectML (REARVIEW_ORT_DIRECTML=ON)");
 #endif
     }
     if (device == "migraphx") {

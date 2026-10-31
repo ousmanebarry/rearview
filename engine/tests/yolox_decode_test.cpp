@@ -13,7 +13,8 @@ constexpr int kCols = 85;
 constexpr int kRows = 80 * 80 + 40 * 40 + 20 * 20;
 
 // Sets the row for grid cell (gx, gy) at stride 8 to a box centred in the cell.
-void put(std::vector<float>& out, int gx, int gy, float w, float h, float obj, int cls, float score) {
+void put(std::vector<float>& out, int gx, int gy, float w, float h, float obj, int cls,
+         float score) {
     float* r = out.data() + static_cast<size_t>(gy * 80 + gx) * kCols;
     r[0] = 0.5f;
     r[1] = 0.5f;
@@ -38,9 +39,9 @@ TEST(YoloxDecode, GridDecodeAndMapBack) {
 
 TEST(YoloxDecode, DropsUnwantedClassesAndLowScores) {
     std::vector<float> out(static_cast<size_t>(kRows) * kCols, 0.0f);
-    put(out, 1, 1, 16, 16, 0.9f, 4, 0.9f);   // airplane: not a kept class
-    put(out, 30, 30, 16, 16, 0.5f, 2, 0.5f); // 0.25 < 0.3
-    put(out, 60, 60, 16, 16, 0.9f, 0, 0.5f); // person 0.45: kept
+    put(out, 1, 1, 16, 16, 0.9f, 4, 0.9f);    // airplane: not a kept class
+    put(out, 30, 30, 16, 16, 0.5f, 2, 0.5f);  // 0.25 < 0.3
+    put(out, 60, 60, 16, 16, 0.9f, 0, 0.5f);  // person 0.45: kept
     const auto d = decode_yolox(out.data(), kRows, kCols, 640, {1, 0, 0}, 0.3f, 0.45f);
     ASSERT_EQ(d.size(), 1u);
     EXPECT_EQ(d[0].cls, 0);

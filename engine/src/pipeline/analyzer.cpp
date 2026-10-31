@@ -64,7 +64,8 @@ AnalyzeSummary Analyzer::run(const AnalyzeOptions& opt, const Callbacks& cb,
     if (!opt.debug_video.empty()) {
         dbg = std::make_unique<debug::DebugWriter>(opt.debug_video, opt.fps,
                                                    cv::Size(src->width(), src->height()));
-        if (!dbg->is_open()) throw AnalyzeError("bad_request", "cannot write " + opt.debug_video.string());
+        if (!dbg->is_open())
+            throw AnalyzeError("bad_request", "cannot write " + opt.debug_video.string());
     }
 
     const bool tracking = has(opt.features, "track");
@@ -105,7 +106,8 @@ AnalyzeSummary Analyzer::run(const AnalyzeOptions& opt, const Callbacks& cb,
         if (tracking) {
             tracked = tracker.update(dets);
         } else {
-            for (const auto& d : dets) tracked.push_back({0, d.cls, d.conf, d.box, d.box.height(), 0});
+            for (const auto& d : dets)
+                tracked.push_back({0, d.cls, d.conf, d.box, d.box.height(), 0});
         }
         sum.stages.tracking += ms_since(t);
 
@@ -117,7 +119,8 @@ AnalyzeSummary Analyzer::run(const AnalyzeOptions& opt, const Callbacks& cb,
             const bool inside = geo_.path.contains(o.box, fw, fh);
             if (want_dist) r.dist_m = geometry::distance_m(o.box, o.cls, cal, geo_.class_heights);
             // TTC only for objects in our path; the Kalman rate is per analysed frame.
-            if (want_ttc && inside) r.ttc_s = geometry::ttc_s(o.height, o.height_vel / step_s, geo_.min_box_px);
+            if (want_ttc && inside)
+                r.ttc_s = geometry::ttc_s(o.height, o.height_vel / step_s, geo_.min_box_px);
             fr.objects.push_back(r);
             in_path.push_back(inside);
         }

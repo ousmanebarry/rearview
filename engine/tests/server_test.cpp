@@ -1,3 +1,5 @@
+#include "protocol/server.h"
+
 #include <gtest/gtest.h>
 
 #include <chrono>
@@ -6,7 +8,6 @@
 #include <thread>
 
 #include "protocol/handlers.h"
-#include "protocol/server.h"
 
 using namespace rearview;
 using namespace rearview::protocol;
@@ -78,17 +79,19 @@ TEST(Server, EveryReplyType) {
     EXPECT_EQ(r[5]["type"], "done");
     EXPECT_EQ(r[5]["frames"], 2);
     EXPECT_EQ(r[5]["cancelled"], false);
-    EXPECT_EQ(r[6], Json::parse(R"({"id":3,"type":"error","code":"file_not_found","msg":"no such file: missing.mp4"})"));
+    EXPECT_EQ(
+        r[6],
+        Json::parse(
+            R"({"id":3,"type":"error","code":"file_not_found","msg":"no such file: missing.mp4"})"));
     EXPECT_EQ(r[7]["code"], "unknown_command");
     EXPECT_EQ(r[7]["id"], 4);
 }
 
 TEST(Server, CancelStopsTheJob) {
-    const auto r = serve(
-        R"({"id":9,"cmd":"analyze","path":"slow.mp4"})"
-        "\n"
-        R"({"id":10,"cmd":"cancel","target_id":9})"
-        "\n");
+    const auto r = serve(R"({"id":9,"cmd":"analyze","path":"slow.mp4"})"
+                         "\n"
+                         R"({"id":10,"cmd":"cancel","target_id":9})"
+                         "\n");
     // ready, progress, done (no frames: cancelled before the first one)
     ASSERT_EQ(r.size(), 3u);
     EXPECT_EQ(r[2]["type"], "done");
@@ -97,13 +100,12 @@ TEST(Server, CancelStopsTheJob) {
 }
 
 TEST(Server, ShutdownStopsReading) {
-    const auto r = serve(
-        R"({"id":1,"cmd":"ping"})"
-        "\n"
-        R"({"id":2,"cmd":"shutdown"})"
-        "\n"
-        R"({"id":3,"cmd":"ping"})"
-        "\n");
+    const auto r = serve(R"({"id":1,"cmd":"ping"})"
+                         "\n"
+                         R"({"id":2,"cmd":"shutdown"})"
+                         "\n"
+                         R"({"id":3,"cmd":"ping"})"
+                         "\n");
     ASSERT_EQ(r.size(), 2u);
     EXPECT_EQ(r[1]["id"], 1);
 }
@@ -125,7 +127,8 @@ TEST(Server, ParseAnalyze) {
     EXPECT_DOUBLE_EQ(o.windows[0].second, 30.0);
     EXPECT_EQ(o.features, std::vector<std::string>{"detect"});
     EXPECT_THROW(parse_analyze(Json::parse(R"({"id":1})")), pipeline::AnalyzeError);
-    EXPECT_THROW(parse_analyze(Json::parse(R"({"path":"x","windows":[[3,1]]})")), pipeline::AnalyzeError);
+    EXPECT_THROW(parse_analyze(Json::parse(R"({"path":"x","windows":[[3,1]]})")),
+                 pipeline::AnalyzeError);
 }
 
 TEST(Server, RealAnalyzerMissingFile) {

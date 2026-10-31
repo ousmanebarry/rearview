@@ -1,11 +1,11 @@
+#include "decode/probe.h"
+
 #include <gtest/gtest.h>
 
 #include <filesystem>
 #include <fstream>
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
-
-#include "decode/probe.h"
 
 namespace fs = std::filesystem;
 using rearview::decode::probe;

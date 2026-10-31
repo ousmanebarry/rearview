@@ -2,9 +2,9 @@
 
 #include <filesystem>
 #include <memory>
-#include <optional>
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
+#include <optional>
 #include <vector>
 
 namespace rearview::decode {

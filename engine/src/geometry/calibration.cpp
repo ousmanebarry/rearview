@@ -72,8 +72,8 @@ std::optional<Calibration> load_calibration(const std::filesystem::path& p) {
 void save_calibration(const Calibration& c, const std::filesystem::path& p) {
     if (p.has_parent_path()) std::filesystem::create_directories(p.parent_path());
     nlohmann::ordered_json j{{"model", c.model}, {"width", c.width}, {"height", c.height},
-                             {"fx", c.fx},       {"fy", c.fy},         {"cx", c.cx},
-                             {"cy", c.cy},       {"dist", c.dist},     {"rms", c.rms}};
+                             {"fx", c.fx},       {"fy", c.fy},       {"cx", c.cx},
+                             {"cy", c.cy},       {"dist", c.dist},   {"rms", c.rms}};
     std::ofstream(p) << j.dump(2) << "\n";
 }
 
@@ -141,8 +141,15 @@ CalibrateResult calibrate(const std::vector<cv::Mat>& frames, const CalibrateOpt
         cv::Mat K, D;
         std::vector<cv::Mat> rv, tv;
         const double rms = cv::calibrateCamera(objs, img, size, K, D, rv, tv);
-        r.standard = {"standard", size.width, size.height, K.at<double>(0, 0), K.at<double>(1, 1),
-                      K.at<double>(0, 2), K.at<double>(1, 2), std::vector<double>(D.begin<double>(), D.end<double>()), rms};
+        r.standard = {"standard",
+                      size.width,
+                      size.height,
+                      K.at<double>(0, 0),
+                      K.at<double>(1, 1),
+                      K.at<double>(0, 2),
+                      K.at<double>(1, 2),
+                      std::vector<double>(D.begin<double>(), D.end<double>()),
+                      rms};
     }
     try {
         std::vector<std::vector<cv::Point3d>> objd;
@@ -158,8 +165,9 @@ CalibrateResult calibrate(const std::vector<cv::Mat>& frames, const CalibrateOpt
             objd, imgd, size, K, D, rv, tv,
             cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC | cv::fisheye::CALIB_FIX_SKEW,
             {cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 100, 1e-6});
-        r.fisheye = {"fisheye", size.width, size.height, K(0, 0), K(1, 1), K(0, 2), K(1, 2),
-                     {D[0], D[1], D[2], D[3]}, rms};
+        r.fisheye = {"fisheye", size.width, size.height, K(0, 0),
+                     K(1, 1),   K(0, 2),    K(1, 2),     {D[0], D[1], D[2], D[3]},
+                     rms};
     } catch (const cv::Exception& e) {
         std::cerr << "fisheye calibration failed: " << e.what() << "\n";
         r.fisheye.rms = 1e9;
@@ -175,8 +183,7 @@ CalibrateResult calibrate_video(const std::filesystem::path& video, const Calibr
     cv::Mat f;
     for (long i = 0; cap.grab(); ++i) {
         if (i % opt.sample_every != 0) continue;
-        if (cap.retrieve(f) && sharpness(f) >= opt.min_sharpness &&
-            find_corners(f, opt.board)) {
+        if (cap.retrieve(f) && sharpness(f) >= opt.min_sharpness && find_corners(f, opt.board)) {
             frames.push_back(f.clone());
             if (static_cast<int>(frames.size()) >= opt.max_frames) break;
         }

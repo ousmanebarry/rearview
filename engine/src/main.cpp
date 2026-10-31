@@ -14,7 +14,11 @@
 #include <format>
 #include <iostream>
 #include <map>
+#include <opencv2/calib3d.hpp>
 #include <opencv2/core/version.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/videoio.hpp>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -23,11 +27,6 @@
 #include "geometry/calibration.h"
 #include "geometry/distance.h"
 #include "pipeline/analyzer.h"
-
-#include <opencv2/calib3d.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/videoio.hpp>
-#include <sstream>
 #include "protocol/handlers.h"
 #include "protocol/messages.h"
 #include "protocol/server.h"
@@ -103,7 +102,8 @@ pipeline::GeometryConfig geometry_config(const Args& a) {
     g.min_box_px = a.num("--min-box-px", g.min_box_px);
     if (a.has("--path")) {
         auto p = geometry::parse_path(a.get("--path"));
-        if (!p) throw std::invalid_argument("--path wants x,y;x,y;x,y;x,y as fractions of the frame");
+        if (!p)
+            throw std::invalid_argument("--path wants x,y;x,y;x,y;x,y as fractions of the frame");
         g.path = *p;
     }
     if (a.has("--class-heights")) {
@@ -117,22 +117,26 @@ pipeline::GeometryConfig geometry_config(const Args& a) {
 // engine calibrate <video> --board 9x6 --square-mm 25 --out calibration/front.json
 int cmd_calibrate(const Args& a) {
     if (a.pos.size() != 1) {
-        std::cerr << "usage: engine calibrate <video> [--board 9x6] [--square-mm 25] [--out front.json]\n"
-                     "         [--undistort-preview out.jpg] [--max-frames 40] [--every 10]\n";
+        std::cerr
+            << "usage: engine calibrate <video> [--board 9x6] [--square-mm 25] [--out front.json]\n"
+               "         [--undistort-preview out.jpg] [--max-frames 40] [--every 10]\n";
         return 2;
     }
     geometry::CalibrateOptions opt;
     const std::string board = a.get("--board", "9x6");
     const auto x = board.find('x');
-    if (x == std::string::npos) throw std::invalid_argument("--board wants COLSxROWS of inner corners");
+    if (x == std::string::npos)
+        throw std::invalid_argument("--board wants COLSxROWS of inner corners");
     opt.board = {std::stoi(board.substr(0, x)), std::stoi(board.substr(x + 1))};
     opt.square_mm = a.num("--square-mm", 25);
     opt.max_frames = static_cast<int>(a.num("--max-frames", 40));
     opt.sample_every = static_cast<int>(a.num("--every", 10));
     const auto r = geometry::calibrate_video(a.pos[0], opt);
     std::cout << std::format("frames with the board: {}\n", r.frames_used);
-    std::cout << std::format("standard model: rms {:.3f} px, fx {:.1f} fy {:.1f}\n", r.standard.rms, r.standard.fx, r.standard.fy);
-    std::cout << std::format("fisheye model:  rms {:.3f} px, fx {:.1f} fy {:.1f}\n", r.fisheye.rms, r.fisheye.fx, r.fisheye.fy);
+    std::cout << std::format("standard model: rms {:.3f} px, fx {:.1f} fy {:.1f}\n", r.standard.rms,
+                             r.standard.fx, r.standard.fy);
+    std::cout << std::format("fisheye model:  rms {:.3f} px, fx {:.1f} fy {:.1f}\n", r.fisheye.rms,
+                             r.fisheye.fx, r.fisheye.fy);
     std::cout << "kept: " << r.best.model << "\n";
     const std::string out = a.get("--out", "calibration.json");
     geometry::save_calibration(r.best, out);
@@ -143,7 +147,8 @@ int cmd_calibrate(const Args& a) {
         cap.read(f);
         if (r.best.model == "fisheye") {
             cv::Matx33d newK;
-            cv::fisheye::estimateNewCameraMatrixForUndistortRectify(r.best.K(), r.best.dist, f.size(), cv::Matx33d::eye(), newK, 0.0);
+            cv::fisheye::estimateNewCameraMatrixForUndistortRectify(
+                r.best.K(), r.best.dist, f.size(), cv::Matx33d::eye(), newK, 0.0);
             cv::fisheye::undistortImage(f, u, r.best.K(), r.best.dist, newK);
         } else {
             cv::undistort(f, u, r.best.K(), r.best.dist);
@@ -216,9 +221,10 @@ void print_stages(const pipeline::AnalyzeSummary& s) {
 
 int cmd_detect(const Args& a, const fs::path& models) {
     if (a.pos.size() != 1) {
-        std::cerr << "usage: engine detect <file> [--fps 10] [--from s --to s] [--debug-video out.mp4]\n"
-                     "         [--json] [--models dir] [--device cpu|dml|migraphx] [--threads n]\n"
-                     "         [--conf 0.3] [--nms 0.45] [--no-track]\n";
+        std::cerr
+            << "usage: engine detect <file> [--fps 10] [--from s --to s] [--debug-video out.mp4]\n"
+               "         [--json] [--models dir] [--device cpu|dml|migraphx] [--threads n]\n"
+               "         [--conf 0.3] [--nms 0.45] [--no-track]\n";
         return 2;
     }
     pipeline::AnalyzeOptions opt;
@@ -271,9 +277,12 @@ int cmd_serve(const Args& a, const fs::path& models) {
     // --lazy defers loading YOLOX to the first analyze (search only needs CLIP text).
     std::unique_ptr<pipeline::Analyzer> analyzer;
     const auto geo = geometry_config(a);
-    if (!a.has("--lazy")) analyzer = std::make_unique<pipeline::Analyzer>(dcfg, track::TrackerConfig{}, geo);
-    protocol::Handler analyze = [&](const protocol::Json& c, protocol::JobEmitter& e, const std::atomic<bool>& cancel) {
-        if (!analyzer) analyzer = std::make_unique<pipeline::Analyzer>(dcfg, track::TrackerConfig{}, geo);
+    if (!a.has("--lazy"))
+        analyzer = std::make_unique<pipeline::Analyzer>(dcfg, track::TrackerConfig{}, geo);
+    protocol::Handler analyze = [&](const protocol::Json& c, protocol::JobEmitter& e,
+                                    const std::atomic<bool>& cancel) {
+        if (!analyzer)
+            analyzer = std::make_unique<pipeline::Analyzer>(dcfg, track::TrackerConfig{}, geo);
         return protocol::analyze_handler(*analyzer)(c, e, cancel);
     };
     embed::Clip clip(fs::path(dcfg.model_path).parent_path(), dcfg.device, dcfg.threads);
@@ -283,21 +292,23 @@ int cmd_serve(const Args& a, const fs::path& models) {
         if (!blurrer) {
             blur_det = std::make_unique<detect::Detector>(dcfg);
             blurrer = std::make_unique<blur::Blurrer>(
-                blur::BlurConfig{.face_model = fs::path(dcfg.model_path).parent_path() / "face_detection_yunet_2023mar.onnx"},
+                blur::BlurConfig{.face_model = fs::path(dcfg.model_path).parent_path() /
+                                               "face_detection_yunet_2023mar.onnx"},
                 *blur_det);
         }
         return *blurrer;
     };
     std::map<std::string, protocol::Handler> handlers{
         {"analyze", analyze},
-        {"blur", protocol::blur_handler(get_blurrer)},    {"embed_frames", protocol::embed_frames_handler(clip)},
+        {"blur", protocol::blur_handler(get_blurrer)},
+        {"embed_frames", protocol::embed_frames_handler(clip)},
         {"embed_text", protocol::embed_text_handler(clip)},
         {"extract_frames", protocol::extract_frames_handler()},
     };
     std::vector<std::string> caps;
     for (const auto& [k, v] : handlers) caps.push_back(k);
-    protocol::Server srv(std::cin, std::cout,
-                         {REARVIEW_ENGINE_VERSION, dcfg.device, caps}, std::move(handlers));
+    protocol::Server srv(std::cin, std::cout, {REARVIEW_ENGINE_VERSION, dcfg.device, caps},
+                         std::move(handlers));
     std::cerr << "engine: serving on stdin/stdout (device " << dcfg.device << ")\n";
     return srv.run();
 }

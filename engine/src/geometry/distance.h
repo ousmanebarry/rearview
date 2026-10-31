@@ -2,8 +2,8 @@
 
 #include <array>
 #include <map>
-#include <optional>
 #include <opencv2/core.hpp>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -30,7 +30,8 @@ std::optional<double> ttc_s(double h, double dh_dt, double min_h);
 // The in-path region: a quadrilateral given as fractions of the frame
 // (bottom-left, top-left, top-right, bottom-right).
 struct PathRegion {
-    std::array<cv::Point2f, 4> corners{{{0.30f, 0.95f}, {0.46f, 0.55f}, {0.54f, 0.55f}, {0.70f, 0.95f}}};
+    std::array<cv::Point2f, 4> corners{
+        {{0.30f, 0.95f}, {0.46f, 0.55f}, {0.54f, 0.55f}, {0.70f, 0.95f}}};
 
     std::vector<cv::Point2f> pixels(int w, int h) const;
     // True when the box's bottom-centre lies inside the region.

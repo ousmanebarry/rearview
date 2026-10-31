@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "track/kalman.h"
+
+#include <gtest/gtest.h>
 
 using namespace rearview;
 using namespace rearview::track;
