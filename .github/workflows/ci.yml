@@ -38,6 +38,16 @@ jobs:
       VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg-bincache
     steps:
       - uses: actions/checkout@v4
+      # The test clips are in Git LFS; cache them so CI doesn't spend LFS bandwidth on every run.
+      - name: List LFS objects
+        run: git lfs ls-files --long | cut -d ' ' -f1 | sort > .lfs-ids
+      - name: Cache LFS objects
+        uses: actions/cache@v4
+        with:
+          path: .git/lfs
+          key: lfs-${{ hashFiles('.lfs-ids') }}
+      - name: Fetch the test clips
+        run: git lfs pull
       - name: Install build tools
         run: sudo apt-get update && sudo apt-get install -y ninja-build nasm pkg-config autoconf autoconf-archive automake libtool
       - name: Read vcpkg baseline
@@ -74,6 +84,16 @@ jobs:
       VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\vcpkg-bincache
     steps:
       - uses: actions/checkout@v4
+      - name: List LFS objects
+        shell: bash
+        run: git lfs ls-files --long | cut -d ' ' -f1 | sort > .lfs-ids
+      - name: Cache LFS objects
+        uses: actions/cache@v4
+        with:
+          path: .git/lfs
+          key: lfs-${{ hashFiles('.lfs-ids') }}
+      - name: Fetch the test clips
+        run: git lfs pull
       - name: Set up vcpkg at the manifest baseline
         shell: pwsh
         run: |

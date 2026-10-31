@@ -140,8 +140,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: List LFS objects
+        run: git lfs ls-files --long | cut -d ' ' -f1 | sort > .lfs-ids
+      - name: Cache LFS objects
+        uses: actions/cache@v4
         with:
-          lfs: true
+          path: .git/lfs
+          key: lfs-${{ hashFiles('.lfs-ids') }}
+      - name: Fetch the clips
+        run: git lfs pull
       - name: Zip the sample clips
         run: zip -j0 rearview-samples.zip testdata/clips/*.mp4
       - uses: actions/upload-artifact@v4
