@@ -1,0 +1,28 @@
+# Search test queries (task 7.6). Times are camera-local (America/New_York).
+# DRAFT: drafted by the agent from contact sheets (one frame every 15 s) of 6 recordings;
+# each range is the sampled frame +-5 s. The owner should confirm or widen each range.
+query,from_local,to_local,note
+green highway exit sign,2026-10-23 15:15:25,2026-10-23 15:15:35,Terry Fox Drive sign gantry
+camper trailer on the highway,2026-10-23 15:15:40,2026-10-23 15:15:50,white travel trailer ahead
+transport truck with a trailer,2026-10-23 15:17:40,2026-10-23 15:17:50,Light Speed trailer on the right
+white pickup truck,2026-10-24 12:45:15,2026-10-24 12:45:25,dually turning ahead
+tow truck,2026-10-24 12:46:15,2026-10-24 12:46:25,white tow truck on the right
+stopped at a red light at an intersection,2026-10-24 12:46:45,2026-10-24 12:47:10,waiting at lights
+red convertible,2026-10-24 12:46:00,2026-10-24 12:46:10,on the right
+school crossing guard holding a stop sign,2026-10-24 12:48:00,2026-10-24 12:48:10,red sign on the right
+chain-link fence,2026-10-24 12:47:15,2026-10-24 12:47:25,on the left
+green traffic light at night,2026-10-23 20:04:08,2026-10-23 20:04:18,overhead signal
+dark country road at night,2026-10-23 20:04:40,2026-10-23 20:05:00,unlit two-lane road
+pedestrian bridge over the highway,2026-10-24 13:18:48,2026-10-24 13:18:58,enclosed walkway
+highway sign for 417 west,2026-10-24 13:20:03,2026-10-24 13:20:13,Metcalfe / Catherine gantry
+tall apartment tower,2026-10-24 13:19:33,2026-10-24 13:19:43,high-rise on the left
+construction crane,2026-10-25 13:43:14,2026-10-25 13:43:24,tower crane on the right
+stop sign at a suburban intersection,2026-10-25 13:41:29,2026-10-25 13:41:39,
+row of townhouses with parked cars,2026-10-25 13:40:30,2026-10-25 13:41:05,parked
+speed limit 40 sign,2026-10-25 13:41:14,2026-10-25 13:41:24,
+bright red autumn tree,2026-10-25 13:41:45,2026-10-25 13:42:10,
+brake lights of the car ahead at night,2026-10-23 21:12:41,2026-10-23 21:13:06,queue at a red light
+red traffic lights at night,2026-10-23 21:14:11,2026-10-23 21:14:36,
+lit billboard at night,2026-10-23 21:14:56,2026-10-23 21:15:06,
+silver SUV right next to us on the highway,2026-10-24 13:18:19,2026-10-24 13:18:29,
+concrete sound barrier wall along the highway,2026-10-24 13:20:34,2026-10-24 13:20:59,

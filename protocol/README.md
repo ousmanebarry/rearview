@@ -63,7 +63,11 @@ Go starts the engine as a long-running child process and they talk in newline-de
 - `windows`: list of `[start, end]` in seconds from the start of the file. Empty list = whole file.
 - `analyze` also accepts `debug_video` (write an MP4 with the boxes drawn) and `decoder` (`opencv` or `ffmpeg`); both optional.
 - `cancel` gets no reply of its own: the cancelled job ends with `done` and `"cancelled": true`. A `cancel` for a job that hasn't started yet makes it end at once the same way.
-- `stages_ms`: milliseconds spent per engine stage over the whole job (`decode`, `preprocess`, `inference`, `postprocess`, `tracking`, `geometry`); `rearview bench` sums them.
+- `stages_ms`: milliseconds spent per engine stage over the whole job (`decode`, `preprocess`, `inference`, `postprocess`, `tracking`, `geometry`); `rearview bench` sums them. `done` also carries `peak_mem_mb`, the engine's peak working set.
+- `analyze` options added in Phase 6: `threaded` (default true: decode and preprocess on their own threads) and `idle_fps` / `idle_after` (drop to `idle_fps` after `idle_after` frames without detections).
+- `embed_frames` takes `every_sec` (default 1) and `crops` (`center` or `three`); each `embedding` reply then carries `crop` (`left`, `center`, `right`). Vectors are 512 floats, L2-normalised.
+- `extract_frames` ends with `done` carrying `files`, the JPEG paths in the order of `times`. `blur` ends with `done` carrying `path` and `regions` (blurred boxes summed over frames).
+- `engine serve --lazy` loads YOLOX only on the first `analyze`, so text search starts fast; models for `embed_*` and `blur` always load on first use.
 - Commands that aren't valid JSON or lack an integer `id` and a `cmd` get an `error` with code `bad_request` (and the `id` when there is one).
 - `box`: `[x1, y1, x2, y2]` in pixels of the original 2560×1440 frame, not the model's input size.
 - `cls`: one of `car`, `truck`, `bus`, `motorcycle`, `bicycle`, `person`, `traffic_light`. Everything else is dropped in the engine.

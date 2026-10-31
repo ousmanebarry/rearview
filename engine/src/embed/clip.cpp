@@ -85,9 +85,12 @@ Ort::Session& Clip::text() {
 }
 
 std::vector<Vector> Clip::embed_image(const cv::Mat& bgr, Crops crops) {
+    // The bottom of a dashcam frame is our own hood and the camera's text overlay
+    // (speed, GPS, plate, time); they are in every frame and only dilute the match.
+    const cv::Mat scene = bgr.rows > 2 * kSize ? bgr(cv::Rect(0, 0, bgr.cols, bgr.rows * 78 / 100)) : bgr;
     std::vector<float> fracs = crops == Crops::Three ? std::vector<float>{0.0f, 0.5f, 1.0f} : std::vector<float>{0.5f};
     std::vector<float> blob;
-    for (float f : fracs) preprocess(bgr, f, blob);
+    for (float f : fracs) preprocess(scene, f, blob);
     auto& s = vision();
     const std::array<int64_t, 4> shape{static_cast<int64_t>(fracs.size()), 3, kSize, kSize};
     auto mem = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);

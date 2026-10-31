@@ -31,6 +31,9 @@ Newest first; add a row whenever you make a call you'd want to explain later.
 
 | Date       | Decision                                                                                                                                              | Why                                                                                                            |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 2026-10-30 | Search eval: 5/24 (21%) correct moment in the top 5 (best variants: centre crop + plain query, or three crops + plain query), on agent-drafted queries with single ±5 s ranges | Far below 70%; the eval counts only one labelled occurrence of common objects. Queries need owner review and all occurrences labelled (docs/notes/7.md) |
+| 2026-10-30 | CLIP keyframes skip the bottom 22% of the frame (hood + camera text overlay); three crops (left/centre/right) stored, search defaults to best-of-three | Three-crop + plain query went 8% → 21% with the crop |
+| 2026-10-30 | CLIP tokenizer golden ids generated once with the Hugging Face `tokenizers` library in a throwaway venv outside the repo | "Taken once from a trusted implementation"; no Python is committed |
 | 2026-10-30 | GPU route: ONNX Runtime DirectML 1.24.4 (preset `dev-dml`, `--device dml`); MIGraphX via Windows ML not built | DirectML: 53 → 3 ms inference per frame, identical detections; inference is no longer the bottleneck. Windows ML needs the Windows App SDK runtime and EP catalogue (future work) |
 | 2026-10-30 | Default decoder stays OpenCV (software, frame-threaded); D3D11VA source kept behind `--decoder ffmpeg` | Hardware decode was 2.6× slower end to end: per-sample GPU→CPU copies and single-frame decoding vs 16 CPU threads |
 | 2026-10-30 | Engine pipeline threaded (decode / preprocess / inference+tracking) by default | −19% minutes per hour, results byte-identical |
@@ -84,6 +87,6 @@ Fill in as you go; these become the README numbers.
 | Near-miss precision / recall               |       |         |      |
 | Following close precision / recall         |       |         |      |
 | Distance error at 5 / 10 / 15 m            |       |         |      |
-| Search: correct moment in top 5            |       |         |      |
+| Search: correct moment in top 5            | 21% (5/24) | 24 draft queries, 5.35 h front footage, 19,266 keyframes | 2026-10-30 |
 | Minutes per hour of footage (CPU baseline) | 28.0 (2 workers × 4 threads) | 15 min of front footage (bench set, first 5 files), 10 fps analysis | 2026-10-30 |
 | Minutes per hour of footage (final)        | 2.4 (DirectML, 2 workers) | 61.9 min front footage (bench/set.txt), 10 fps analysis | 2026-10-30 |

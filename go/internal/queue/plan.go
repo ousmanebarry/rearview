@@ -86,7 +86,8 @@ func Plan(ctx context.Context, db *store.DB, cfg config.Config, onlyWindows bool
 
 // PlanEmbed creates one embed_frames job per segment that has none: front
 // files at priority 0, the other cameras after. Parking footage is skipped.
-func PlanEmbed(ctx context.Context, db *store.DB) (int, error) {
+// camera, when set, limits planning to that camera.
+func PlanEmbed(ctx context.Context, db *store.DB, camera string) (int, error) {
 	segs, err := db.Segments(ctx, 0)
 	if err != nil {
 		return 0, err
@@ -97,7 +98,7 @@ func PlanEmbed(ctx context.Context, db *store.DB) (int, error) {
 	}
 	added := 0
 	for _, s := range segs {
-		if planned[s.ID] || s.Parking || s.DurationS <= 0 {
+		if planned[s.ID] || s.Parking || s.DurationS <= 0 || (camera != "" && s.Camera != camera) {
 			continue
 		}
 		pri := 0

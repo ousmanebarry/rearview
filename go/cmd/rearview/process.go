@@ -36,6 +36,7 @@ func newProcessCmd() *cobra.Command {
 		retryFailed bool
 		plain       bool
 		embed       bool
+		camera      string
 	)
 	cmd := &cobra.Command{
 		Use:   "process [--workers 2] [--only-windows] [--device cpu|dml|migraphx] [--embed]",
@@ -70,7 +71,7 @@ func newProcessCmd() *cobra.Command {
 			var planned int
 			if embed {
 				kind = "embed_frames"
-				planned, err = queue.PlanEmbed(ctx, db)
+				planned, err = queue.PlanEmbed(ctx, db, camera)
 			} else {
 				planned, err = queue.Plan(ctx, db, cfg, onlyWindows)
 			}
@@ -115,6 +116,7 @@ func newProcessCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&retryFailed, "retry-failed", false, "put failed jobs back in the queue")
 	cmd.Flags().BoolVar(&plain, "plain", false, "plain log lines instead of the progress view")
 	cmd.Flags().BoolVar(&embed, "embed", false, "compute CLIP keyframe vectors for search")
+	cmd.Flags().StringVar(&camera, "camera", "", "with --embed, only plan this camera (front first is the default order)")
 	return cmd
 }
 
