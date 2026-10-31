@@ -130,7 +130,7 @@ func printScoreDetails(cmd *cobra.Command, db *store.DB, cfg config.Config, loc 
 			if l.Note != "" {
 				label += " (" + l.Note + ")"
 			}
-			parts = append(parts, fmt.Sprintf("%s -%.1f", label, l.Points))
+			parts = append(parts, fmt.Sprintf("%s %+.1f", label, -l.Points))
 		}
 		if len(parts) == 0 {
 			parts = []string{"none"}

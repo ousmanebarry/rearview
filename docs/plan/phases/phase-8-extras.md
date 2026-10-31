@@ -9,10 +9,10 @@ Only start this after Phase 7 is done and Phase 10 polish is at least drafted; e
   - `rearview export <event id> --blur` cuts the clip, sends it to the engine, saves the result.
   - Input needed: a frame-by-frame check of 5 exported test clips with plates and pedestrians.
   - Done when: nothing readable remains in those 5 clips.
-- [ ] **8.2 Driving score [agent, you review]**
+- [x] **8.2 Driving score [agent, you review]**
   - Per-trip score out of 100: points lost per hard brake, swerve, near-miss and minute of close following, scaled per 100 km. Save to `trips.score`.
   - `rearview trips --score` shows the score and a breakdown of every point lost; a weekly trend line in the terminal.
   - Done when: the breakdown always adds up to the score.
-- [ ] **8.3 Incident report PDF [agent]**
+- [x] **8.3 Incident report PDF [agent]**
   - `rearview report <event id>`: one-page PDF with 3 key frames (engine `extract_frames`), a speed and G-force graph for 30 seconds around the event, coordinates and nearest timestamp, event details and the clip file name.
   - Done when: the PDF is readable printed in black and white.
