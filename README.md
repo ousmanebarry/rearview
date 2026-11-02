@@ -18,11 +18,11 @@ Near-miss and following-distance detection run end to end but have no accuracy n
 
 No dashcam, GPU or C++ toolchain needed. Each option runs on three 20-second sample clips.
 
-| Time        | How                                                                                                                                                                    |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ~5 min      | **Prebuilt download.** Get `rearview-windows-x64.zip` or `rearview-linux-x64.tar.gz` from [Releases](https://github.com/ousmanebarry/rearview/releases/latest), extract it and run the quickstart (below) |
-| ~10 min     | **In the browser.** [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/ousmanebarry/rearview?quickstart=1), wait for setup to finish, then `bash scripts/quickstart.sh` |
-| ~30 s       | **Just the orchestrator.** `cd go && go test ./...` runs import, the job queue, worker pool, crash recovery and event fusion against a fake engine (`go/cmd/fakeengine`) |
+| Time    | How                                                                                                                                                                                                                 |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~5 min  | **Prebuilt download.** Get `rearview-windows-x64.zip` or `rearview-linux-x64.tar.gz` from [Releases](https://github.com/ousmanebarry/rearview/releases/latest), extract it and run the quickstart (below)           |
+| ~10 min | **In the browser.** [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/ousmanebarry/rearview?quickstart=1), wait for setup to finish, then `bash scripts/quickstart.sh` |
+| ~30 s   | **Just the orchestrator.** `cd go && go test ./...` runs import, the job queue, worker pool, crash recovery and event fusion against a fake engine (`go/cmd/fakeengine`)                                            |
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File quickstart.ps1     # Windows (needs ffmpeg: winget install Gyan.FFmpeg)
@@ -65,17 +65,17 @@ It was built for a VIOFO A229 Plus (2560×1440 front and rear, 3-minute loop fil
 
 ### 1. Requirements
 
-| What                                                   | Notes                                                                                                                                    |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Windows 11 x64                                         | Linux works for the CLI and the CPU engine (CI builds both), but the setup script, DirectML and the viewer are Windows-only               |
-| Go 1.27+                                               | The CLI (pure Go, no C compiler needed)                                                                                                  |
-| Visual Studio 2022 (or Build Tools), "Desktop development with C++" | The engine and the viewer (C++20)                                                                                         |
-| CMake 3.26+ and [vcpkg](https://github.com/microsoft/vcpkg) | `VCPKG_ROOT` must point at the vcpkg folder; vcpkg builds OpenCV, FFmpeg and Qt from source the first time                          |
-| Git with Git LFS                                       | The three 20-second test clips are in LFS                                                                                                |
-| ffmpeg and ffprobe on `PATH`                           | Import (probing), clips, exports                                                                                                         |
-| exiftool (optional)                                    | Only to regenerate the GPS golden files                                                                                                  |
-| A DirectX 12 GPU (optional)                            | For the DirectML build; developed on an RX 9070 XT. Without one, use the CPU build (about 12× slower)                                      |
-| Disk                                                   | About 650 MB per 3-minute 1440p recording, plus ~10 GB for vcpkg build trees                                                             |
+| What                                                                | Notes                                                                                                                       |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Windows 11 x64                                                      | Linux works for the CLI and the CPU engine (CI builds both), but the setup script, DirectML and the viewer are Windows-only |
+| Go 1.27+                                                            | The CLI (pure Go, no C compiler needed)                                                                                     |
+| Visual Studio 2022 (or Build Tools), "Desktop development with C++" | The engine and the viewer (C++20)                                                                                           |
+| CMake 3.26+ and [vcpkg](https://github.com/microsoft/vcpkg)         | `VCPKG_ROOT` must point at the vcpkg folder; vcpkg builds OpenCV, FFmpeg and Qt from source the first time                  |
+| Git with Git LFS                                                    | The three 20-second test clips are in LFS                                                                                   |
+| ffmpeg and ffprobe on `PATH`                                        | Import (probing), clips, exports                                                                                            |
+| exiftool (optional)                                                 | Only to regenerate the GPS golden files                                                                                     |
+| A DirectX 12 GPU (optional)                                         | For the DirectML build; developed on an RX 9070 XT. Without one, use the CPU build (about 12× slower)                       |
+| Disk                                                                | About 650 MB per 3-minute 1440p recording, plus ~10 GB for vcpkg build trees                                                |
 
 ### 2. Get the code and the tools
 
@@ -103,10 +103,10 @@ This fetches YOLOX-s, the CLIP ViT-B/32 image and text encoders with the tokeniz
 
 Pick one preset:
 
-| Preset    | Inference                                              | Use when                                                     |
-| --------- | ------------------------------------------------------ | ------------------------------------------------------------ |
-| `dev-dml` | ONNX Runtime with DirectML (GPU), falls back to CPU    | You have a DirectX 12 GPU (AMD, NVIDIA or Intel)             |
-| `dev`     | ONNX Runtime on the CPU                                | No suitable GPU, or to compare                               |
+| Preset    | Inference                                           | Use when                                         |
+| --------- | --------------------------------------------------- | ------------------------------------------------ |
+| `dev-dml` | ONNX Runtime with DirectML (GPU), falls back to CPU | You have a DirectX 12 GPU (AMD, NVIDIA or Intel) |
+| `dev`     | ONNX Runtime on the CPU                             | No suitable GPU, or to compare                   |
 
 ```powershell
 cd engine
@@ -138,8 +138,9 @@ Rearview reads `~/rearview/config.yaml` (`--config <file>` to use another). Ever
 # ~/rearview/config.yaml
 engine:
   path: C:/path/to/rearview/engine/build/dev-dml/RelWithDebInfo/engine.exe
-  device: dml          # cpu for the dev build
-  workers: 2           # engine processes in parallel; 2 was fastest on a 16-thread CPU
+  device: dml # cpu for the dev build
+  workers: 2 # engine processes in parallel; 2 was fastest on a 16-thread CPU
+
 
 # Optional: where things live (defaults shown)
 # library_path: ~/rearview/library     # imported recordings, YYYY/MM/DD/
@@ -189,25 +190,25 @@ Real-world numbers on the dev PC: importing 235 files (118 GB) is copy-bound at 
 
 ### Commands
 
-| Command                                                 | What it does                                                                                    |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `rearview import <path> [--watch]`                      | Import new recordings, extract GPS, rebuild trips, detect motion events                         |
-| `rearview process [--embed] [--only-windows] [--workers n]` | Run the engine over the library (resumable)                                                  |
-| `rearview trips [--score]`                              | List trips; `--score` adds the driving score, what each trip lost points for and a weekly trend |
-| `rearview trips export <trip>`                          | Write the trip's GPS track as GPX                                                               |
-| `rearview events [--type t] [--since 7d] [--trip n]`    | List events, newest first (types: `hard_brake`, `swerve`, `near_miss`, `following_close`, `tailgated`) |
-| `rearview clip <event> [--camera rear] [--side-by-side] [--exact]` | 15-second clip around an event (stream copy, under a second); prints its path         |
-| `rearview export <event> --blur [--camera rear]`        | Shareable clip with faces and number plates blurred                                             |
-| `rearview report <event> [--out file.pdf]`              | One-page incident PDF: key frames, speed and G graph, location, details                         |
-| `rearview search "<query>" [--limit 10] [--clip] [--json]` | Plain-English search over the footage                                                         |
-| `rearview view`                                         | Open the desktop viewer on the configured database and library                                  |
-| `rearview events detect` / `rearview events fuse`       | Recompute motion events / vision events after changing thresholds (event ids stay the same)     |
-| `rearview label add\|list`, `rearview import-labels`    | Manage ground-truth labels in `testdata/labels/events.csv`                                      |
-| `rearview eval --type <t>` / `rearview eval --search`   | Precision, recall, misses and false alarms against the labels / search top-5 rate               |
-| `rearview bench [--label text]`, `bench compare`, `bench table` | Benchmark minutes per hour of footage and per-stage times, with history                 |
-| `rearview config show`                                  | Print the effective configuration                                                               |
-| `rearview models [download]`                            | Show the engine's models folder and what's missing / download and verify the models             |
-| `rearview debug boxes\|gps <file.MP4>`                  | Inspect a recording's MP4 structure or decoded GPS                                              |
+| Command                                                            | What it does                                                                                           |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `rearview import <path> [--watch]`                                 | Import new recordings, extract GPS, rebuild trips, detect motion events                                |
+| `rearview process [--embed] [--only-windows] [--workers n]`        | Run the engine over the library (resumable)                                                            |
+| `rearview trips [--score]`                                         | List trips; `--score` adds the driving score, what each trip lost points for and a weekly trend        |
+| `rearview trips export <trip>`                                     | Write the trip's GPS track as GPX                                                                      |
+| `rearview events [--type t] [--since 7d] [--trip n]`               | List events, newest first (types: `hard_brake`, `swerve`, `near_miss`, `following_close`, `tailgated`) |
+| `rearview clip <event> [--camera rear] [--side-by-side] [--exact]` | 15-second clip around an event (stream copy, under a second); prints its path                          |
+| `rearview export <event> --blur [--camera rear]`                   | Shareable clip with faces and number plates blurred                                                    |
+| `rearview report <event> [--out file.pdf]`                         | One-page incident PDF: key frames, speed and G graph, location, details                                |
+| `rearview search "<query>" [--limit 10] [--clip] [--json]`         | Plain-English search over the footage                                                                  |
+| `rearview view`                                                    | Open the desktop viewer on the configured database and library                                         |
+| `rearview events detect` / `rearview events fuse`                  | Recompute motion events / vision events after changing thresholds (event ids stay the same)            |
+| `rearview label add\|list`, `rearview import-labels`               | Manage ground-truth labels in `testdata/labels/events.csv`                                             |
+| `rearview eval --type <t>` / `rearview eval --search`              | Precision, recall, misses and false alarms against the labels / search top-5 rate                      |
+| `rearview bench [--label text]`, `bench compare`, `bench table`    | Benchmark minutes per hour of footage and per-stage times, with history                                |
+| `rearview config show`                                             | Print the effective configuration                                                                      |
+| `rearview models [download]`                                       | Show the engine's models folder and what's missing / download and verify the models                    |
+| `rearview debug boxes\|gps <file.MP4>`                             | Inspect a recording's MP4 structure or decoded GPS                                                     |
 
 Every command has `--help`. Times are shown in the configured time zone and stored in UTC. Clips, exports, PDFs and GPX files go to `~/rearview/clips/`.
 
@@ -292,14 +293,14 @@ Well below the 70% target. The queries were drafted from contact sheets and each
 
 1 hour of 2560×1440 H.264 front footage analysed at 10 fps with detection, tracking, distance and TTC, on a Ryzen 7 7800X3D + RX 9070 XT ([bench/set.txt](bench/set.txt), [docs/walkthroughs/phase-6-performance.md](docs/walkthroughs/phase-6-performance.md)):
 
-| Change                                                    | Minutes per hour of footage | Speedup         |
-| --------------------------------------------------------- | --------------------------- | --------------- |
-| CPU baseline (2 workers × 4 threads)¹                     | 28.0                        | 1.0×            |
-| GPU inference: ONNX Runtime + DirectML¹                   | 2.9                         | 9.7×            |
-| 2 engine workers¹                                         | 2.5                         | 11.2×           |
-| Same, with threaded decode/preprocess inside the engine off¹ | 3.0                     | 9.3×            |
-| Hardware decoding (D3D11VA) instead of CPU decoding¹      | 6.4                         | 4.4× (rejected) |
-| **Final, full 62-min set (repeat run within 1.7%)**       | **2.4**                     | **11.7×**       |
+| Change                                                       | Minutes per hour of footage | Speedup         |
+| ------------------------------------------------------------ | --------------------------- | --------------- |
+| CPU baseline (2 workers × 4 threads)¹                        | 28.0                        | 1.0×            |
+| GPU inference: ONNX Runtime + DirectML¹                      | 2.9                         | 9.7×            |
+| 2 engine workers¹                                            | 2.5                         | 11.2×           |
+| Same, with threaded decode/preprocess inside the engine off¹ | 3.0                         | 9.3×            |
+| Hardware decoding (D3D11VA) instead of CPU decoding¹         | 6.4                         | 4.4× (rejected) |
+| **Final, full 62-min set (repeat run within 1.7%)**          | **2.4**                     | **11.7×**       |
 
 ¹ On the first 15 minutes of the set. Inference went from 53 to 3 ms per frame; decoding and resizing 1440p frames (8 + 6 ms) are now the bottleneck.
 
@@ -321,20 +322,20 @@ git ls-files '*.cpp' '*.h' | ForEach-Object { clang-format -i $_ }
 
 ## Troubleshooting
 
-| Problem                                                     | Fix                                                                                                                         |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `cmake --preset` can't find the vcpkg toolchain             | Set `VCPKG_ROOT` to the vcpkg folder and open a new terminal                                                                |
-| First configure takes very long                             | Expected once: vcpkg builds OpenCV/FFmpeg (engine) or Qt (viewer) and caches them; later configures take seconds          |
-| `process` says the engine failed to start or wrong protocol version | `engine.path` in the config must point at an `engine.exe` built from the same commit as the CLI                      |
-| `--device dml` fails or is slow                             | Build the `dev-dml` preset (the `dev` build is CPU-only); `engine info --device dml` must list `DmlExecutionProvider`       |
-| `import` fails with ffprobe errors                          | ffmpeg/ffprobe must be on `PATH`                                                                                            |
-| Import fails with "no camera pattern matches the file name" | Adjust `import.front_pattern` / `rear_pattern` in the config to your camera's file names                                   |
-| Search says there are no keyframes                          | Run `rearview process --embed` first                                                                                        |
-| The engine can't load `yolox_s.onnx` (or the CLIP models)    | Run `rearview models` to see which folder it uses and what's missing, then `rearview models download`                       |
-| Windows blocks `quickstart.ps1` or the downloaded `.exe`s   | Run it with `powershell -ExecutionPolicy Bypass -File quickstart.ps1`; if SmartScreen warns, choose "More info" → "Run anyway" (the binaries aren't code-signed) |
-| The viewer shows "can not load driver QSQLITE"              | Rebuild the viewer: the post-build step copies the Qt plugins and `sqlite3.dll` next to `viewer.exe`                        |
-| The viewer's search box says it can't run `rearview`        | Start it with `--rearview C:/path/to/rearview.exe`                                                                          |
-| The machine crawls during a first build plus `process`      | Don't run a vcpkg build, `process` and the test suite at once; `VCPKG_MAX_CONCURRENCY` limits vcpkg's parallel jobs        |
+| Problem                                                             | Fix                                                                                                                                                              |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cmake --preset` can't find the vcpkg toolchain                     | Set `VCPKG_ROOT` to the vcpkg folder and open a new terminal                                                                                                     |
+| First configure takes very long                                     | Expected once: vcpkg builds OpenCV/FFmpeg (engine) or Qt (viewer) and caches them; later configures take seconds                                                 |
+| `process` says the engine failed to start or wrong protocol version | `engine.path` in the config must point at an `engine.exe` built from the same commit as the CLI                                                                  |
+| `--device dml` fails or is slow                                     | Build the `dev-dml` preset (the `dev` build is CPU-only); `engine info --device dml` must list `DmlExecutionProvider`                                            |
+| `import` fails with ffprobe errors                                  | ffmpeg/ffprobe must be on `PATH`                                                                                                                                 |
+| Import fails with "no camera pattern matches the file name"         | Adjust `import.front_pattern` / `rear_pattern` in the config to your camera's file names                                                                         |
+| Search says there are no keyframes                                  | Run `rearview process --embed` first                                                                                                                             |
+| The engine can't load `yolox_s.onnx` (or the CLIP models)           | Run `rearview models` to see which folder it uses and what's missing, then `rearview models download`                                                            |
+| Windows blocks `quickstart.ps1` or the downloaded `.exe`s           | Run it with `powershell -ExecutionPolicy Bypass -File quickstart.ps1`; if SmartScreen warns, choose "More info" → "Run anyway" (the binaries aren't code-signed) |
+| The viewer shows "can not load driver QSQLITE"                      | Rebuild the viewer: the post-build step copies the Qt plugins and `sqlite3.dll` next to `viewer.exe`                                                             |
+| The viewer's search box says it can't run `rearview`                | Start it with `--rearview C:/path/to/rearview.exe`                                                                                                               |
+| The machine crawls during a first build plus `process`              | Don't run a vcpkg build, `process` and the test suite at once; `VCPKG_MAX_CONCURRENCY` limits vcpkg's parallel jobs                                              |
 
 ## Limitations
 
@@ -349,16 +350,16 @@ git ls-files '*.cpp' '*.h' | ForEach-Object { clang-format -i $_ }
 
 ## Documentation
 
-| Document                                                       | Contents                                                                                   |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| [docs/design.md](docs/design.md)                               | Architecture, stack, repository layout, features, core math, thresholds, testing strategy  |
-| [docs/data-model.md](docs/data-model.md)                       | SQLite schema and conventions                                                              |
-| [protocol/README.md](protocol/README.md)                       | Go ↔ engine message spec                                                                   |
-| [docs/walkthroughs/](docs/walkthroughs/)                       | How each part works, one file per phase, with links into the code and tests                |
-| [docs/plan/](docs/plan/)                                       | The build plan and its progress, plus the decisions log with every measured result         |
-| [docs/writeup.md](docs/writeup.md)                             | The hardest problems: GPS glitches, TTC false alarms, the performance journey              |
-| [docs/demo-script.md](docs/demo-script.md)                     | Shot list and ffmpeg recipe for the demo video                                             |
-| [docs/interview-prep.md](docs/interview-prep.md)               | Likely questions about each module, answered with pointers into the code                   |
+| Document                                         | Contents                                                                                  |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| [docs/design.md](docs/design.md)                 | Architecture, stack, repository layout, features, core math, thresholds, testing strategy |
+| [docs/data-model.md](docs/data-model.md)         | SQLite schema and conventions                                                             |
+| [protocol/README.md](protocol/README.md)         | Go ↔ engine message spec                                                                  |
+| [docs/walkthroughs/](docs/walkthroughs/)         | How each part works, one file per phase, with links into the code and tests               |
+| [docs/plan/](docs/plan/)                         | The build plan and its progress, plus the decisions log with every measured result        |
+| [docs/writeup.md](docs/writeup.md)               | The hardest problems: GPS glitches, TTC false alarms, the performance journey             |
+| [docs/demo-script.md](docs/demo-script.md)       | Shot list and ffmpeg recipe for the demo video                                            |
+| [docs/interview-prep.md](docs/interview-prep.md) | Likely questions about each module, answered with pointers into the code                  |
 
 ## Licence
 
