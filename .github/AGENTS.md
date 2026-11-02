@@ -23,7 +23,7 @@ Rearview: dashcam footage analyser. Go orchestrator (`go/`) + C++ vision engine 
 
 - Go: `cd go && go build ./... && go vet ./... && go test ./...` (`-race` only in CI: it needs cgo).
 - C++: `cd engine && cmake --preset dev && cmake --build --preset dev && ctest --preset dev` (`dev-dml` for the DirectML build; its tests run with `ctest --test-dir build/dev-dml -C RelWithDebInfo`).
-- Viewer: `cd viewer && cmake --preset dev && cmake --build --preset dev`.
+- Viewer: `cd viewer && cmake --preset dev && cmake --build --preset dev`; open it with `rearview view`.
 - Lint: gofmt and staticcheck (`go run honnef.co/go/tools/cmd/staticcheck@v0.8.2 ./...`) for Go, clang-format for C++.
 
 ## Rules

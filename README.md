@@ -31,7 +31,7 @@ powershell -ExecutionPolicy Bypass -File quickstart.ps1     # Windows (needs ffm
 
 The quickstart downloads the models (about 615 MB, checksums verified) and the sample clips once, imports the clips into `~/rearview-demo`, then runs detection, tracking, distance and TTC, indexes keyframes for search and searches for "a traffic light". It also writes `~/rearview-demo/boxes.mp4`, the first clip with every tracked object drawn on it. On a laptop CPU this takes a few minutes. The clips carry no GPS, so speed-based events (hard brakes, following distance) stay empty. Afterwards, try `rearview search "<anything>" --config ~/rearview-demo/config.yaml`.
 
-The Windows download is the DirectML build. It runs on the CPU by default; add `--device dml` (or set `engine.device: dml`) to use a DirectX 12 GPU. Releases are built by [.github/workflows/release.yml](.github/workflows/release.yml) when a `v*` tag is pushed.
+The Windows download is the DirectML build. It runs on the CPU by default; add `--device dml` (or set `engine.device: dml`) to use a DirectX 12 GPU. The downloads don't include the desktop viewer: build it from source ([step 7](#7-optional-build-the-desktop-viewer)), then open it with `rearview view`. Releases are built by [.github/workflows/release.yml](.github/workflows/release.yml) when a `v*` tag is pushed.
 
 ## Contents
 
@@ -57,7 +57,7 @@ The Windows download is the DirectML build. It runs on the CPU by default; add `
 - **Searches** the footage in plain English ("a cyclist at night") with CLIP.
 - **Scores** each trip, explaining every point lost, with a weekly trend.
 - **Benchmarks** itself (`rearview bench`) and **evaluates** itself against your labels (`rearview eval`).
-- An optional **desktop viewer** shows all of it on a video player, timeline and map.
+- An optional **desktop viewer** (`rearview view`) shows all of it on a video player, timeline and map.
 
 It was built for a VIOFO A229 Plus (2560×1440 front and rear, 3-minute loop files) on Windows 11 with an AMD GPU. File-name patterns, time zone and thresholds are all in the config file, and the CPU build runs anywhere, but the GPS decoder only understands the VIOFO "freeGPS" format.
 
@@ -334,7 +334,8 @@ git ls-files '*.cpp' '*.h' | ForEach-Object { clang-format -i $_ }
 | The engine can't load `yolox_s.onnx` (or the CLIP models)           | Run `rearview models` to see which folder it uses and what's missing, then `rearview models download`                                                            |
 | Windows blocks `quickstart.ps1` or the downloaded `.exe`s           | Run it with `powershell -ExecutionPolicy Bypass -File quickstart.ps1`; if SmartScreen warns, choose "More info" → "Run anyway" (the binaries aren't code-signed) |
 | The viewer shows "can not load driver QSQLITE"                      | Rebuild the viewer: the post-build step copies the Qt plugins and `sqlite3.dll` next to `viewer.exe`                                                             |
-| The viewer's search box says it can't run `rearview`                | Start it with `--rearview C:/path/to/rearview.exe`                                                                                                               |
+| The viewer's search box says it can't run `rearview`                | Open it with `rearview view` (passes its own path), or start `viewer.exe` with `--rearview C:/path/to/rearview.exe`                                              |
+| `rearview view` says "viewer not found"                             | Build the viewer (Setup step 7), or set `viewer_path: C:/path/to/viewer.exe` in `~/rearview/config.yaml`                                                         |
 | The machine crawls during a first build plus `process`              | Don't run a vcpkg build, `process` and the test suite at once; `VCPKG_MAX_CONCURRENCY` limits vcpkg's parallel jobs                                              |
 
 ## Limitations

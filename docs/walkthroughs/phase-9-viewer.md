@@ -4,8 +4,10 @@
 
 ```powershell
 cd viewer; cmake --preset dev; cmake --build --preset dev
-build/dev/RelWithDebInfo/viewer.exe [--db ~/rearview/rearview.db] [--library ~/rearview/library] [--rearview path/to/rearview.exe]
+rearview view    # or: build/dev/RelWithDebInfo/viewer.exe [--db ...] [--library ...] [--rearview path/to/rearview.exe]
 ```
+
+`rearview view` ([view.go](../../go/cmd/rearview/view.go)) starts the viewer with `--db`, `--library` and `--rearview` taken from the config and its own path. It uses `viewer_path` from the config, else `viewer.exe` next to `rearview.exe`, else the repo build (from `go/bin/rearview.exe`), else `viewer` on `PATH`. The release bundles don't contain the viewer.
 
 The first configure builds qtbase (about 13 minutes with 14 jobs) and qtmultimedia (2 minutes); later configures restore them from the vcpkg binary cache.
 
