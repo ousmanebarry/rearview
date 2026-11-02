@@ -21,6 +21,8 @@ type Config struct {
 	ClipsPath    string `yaml:"clips_path"`
 	// TimeZone is the camera clock's zone; file names are local wall-clock times.
 	TimeZone string `yaml:"time_zone"`
+	// ViewerPath is the Qt viewer for `rearview view`; empty = look next to rearview and in the repo.
+	ViewerPath string `yaml:"viewer_path"`
 
 	Import    Import    `yaml:"import"`
 	Trips     Trips     `yaml:"trips"`

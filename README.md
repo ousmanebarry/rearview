@@ -156,10 +156,11 @@ engine:
 cd viewer
 cmake --preset dev                 # first run: vcpkg builds Qt 6 base + multimedia (~15 min)
 cmake --build --preset dev
-build/dev/RelWithDebInfo/viewer.exe --rearview C:/path/to/rearview/go/bin/rearview.exe
+cd ..
+go/bin/rearview.exe view           # opens the viewer on your configured database and library
 ```
 
-Options: `--db` and `--library` (default to `~/rearview/...`), `--rearview` (the CLI used by the search box; needed unless `rearview` is on `PATH`). The map loads OpenStreetMap tiles, so it needs an internet connection.
+`rearview view` finds `viewer/build/dev/RelWithDebInfo/viewer.exe` from the repo's `go/bin/rearview.exe`, or `viewer.exe` next to `rearview.exe`; set `viewer_path` in the config if it lives elsewhere. It passes `--db`, `--library` and `--rearview` (the CLI used by the search box) for you; run `viewer.exe` directly to set them by hand. The map loads OpenStreetMap tiles, so it needs an internet connection.
 
 ### 8. (Optional) Calibrate the camera
 
@@ -199,6 +200,7 @@ Real-world numbers on the dev PC: importing 235 files (118 GB) is copy-bound at 
 | `rearview export <event> --blur [--camera rear]`        | Shareable clip with faces and number plates blurred                                             |
 | `rearview report <event> [--out file.pdf]`              | One-page incident PDF: key frames, speed and G graph, location, details                         |
 | `rearview search "<query>" [--limit 10] [--clip] [--json]` | Plain-English search over the footage                                                         |
+| `rearview view`                                         | Open the desktop viewer on the configured database and library                                  |
 | `rearview events detect` / `rearview events fuse`       | Recompute motion events / vision events after changing thresholds (event ids stay the same)     |
 | `rearview label add\|list`, `rearview import-labels`    | Manage ground-truth labels in `testdata/labels/events.csv`                                      |
 | `rearview eval --type <t>` / `rearview eval --search`   | Precision, recall, misses and false alarms against the labels / search top-5 rate               |
